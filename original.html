@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cognitive Toolkit</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* Style overrides for specific components */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+        }
+        input[type=range] {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+        /* Specific background for Time Zone Coordinator work hours */
+        .work-hour-bg { background-color: #dbeafe; } 
+        .current-hour-border { border-left: 4px solid #1d4ed8; }
+        
+        /* Utility for centering the whole app */
+        #app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div id="app-container" class="w-full max-w-6xl mx-auto">
+        
+        <header class="w-full mb-6 p-4 bg-white rounded-xl shadow-md border-b-4 border-gray-100">
+            <h1 class="text-4xl font-extrabold text-gray-900">The Cognitive Toolkit</h1>
+            <p class="text-gray-500">Four essential utilities for better decisions, coordination, and knowledge retention.</p>
+        </header>
+
+        <main id="app-content" class="w-full"></main>
+    </div>
+
+    <script>
+        // --- GLOBAL STATE AND VIEW MANAGEMENT ---
+        let currentView = 'Dashboard';
+        const APP_CONTENT = document.getElementById('app-content');
+
+        /**
+         * Switches the current view and re-renders the app.
+         * @param {string} viewName - The name of the tool/view to switch to.
+         */
+        function setCurrentView(viewName) {
+            currentView = viewName;
+            renderApp();
+        }
+
+        /**
+         * Main render function that determines which content to display.
+         */
+        function renderApp() {
+            let html = '';
+            
+            // Clear the content first to prevent duplication of elements on re-render
+            APP_CONTENT.innerHTML = ''; 
+
+            if (currentView === 'Dashboard') {
+                html = renderDashboard();
+            } else {
+                html = renderToolView();
+            }
+
+            APP_CONTENT.innerHTML = html;
+            
+            // After rendering, execute tool-specific initialization
+            if (currentView === 'TextAnalyzer') {
+                initTextAnalyzer();
+            } else if (currentView === 'TimeCoordinator') {
+                initTimeCoordinator();
+            } else if (currentView === 'CommitmentCalculator') {
+                initCommitmentCalculator();
+            } else if (currentView === 'CostEscalator') {
+                initCostEscalator();
+            }
+            
+            // Re-attach the main header element from the outer scope if it was manipulated
+            document.querySelector('header').style.marginBottom = currentView === 'Dashboard' ? '2rem' : '1rem';
+        }
+
+        /**
+         * Renders the main navigation dashboard.
+         */
+        function renderDashboard() {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+                    
+                    ${createToolCard('TextAnalyzer', 'Real-Time Text Analyzer', 'Analyze readability, word count, and reading time for any content.', 'emerald', 'M20.2 6.72A1.98 1.98 0 0 0 18 5H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V7a1.98 1.98 0 0 0-.2-.98ZM6 7h12v10H6V7Zm4 3h4v1H10Zm0 3h4v1H10Z')}
+                    
+                    ${createToolCard('TimeCoordinator', 'Time Zone Coordinator', 'Find optimal meeting overlap across multiple global time zones.', 'blue', 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20ZM12 4a8 8 0 1 1 0 16 8 8 0 0 1 0-16Zm1 12h-2v-6h3V8h-4v8h2Z')}
+                    
+                    ${createToolCard('CommitmentCalculator', 'Commitment Cost Calculator', 'Quantify the weighted cost (time × energy) versus the reward of a new task.', 'red', 'M19 8H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2Zm0 6H5v-4h14v4Z')}
+                    
+                    ${createToolCard('CostEscalator', 'Recurring Cost Escalator', 'Visualize the opportunity cost and long-term investment growth of small expenses.', 'yellow', 'M10 4v1h4V4h-4Zm-1 10a1 1 0 0 1-1 1H7v2h2v-2h1a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H7v-2h2V9H7V7h4v2a1 1 0 0 1-1 1h-2v2h2v2Zm4-10a10 10 0 1 0 0 20 10 10 0 0 0 0-20Z')}
+                </div>
+            `;
+        }
+
+        /**
+         * Helper to create a dashboard card.
+         */
+        function createToolCard(view, title, description, color, path) {
+            let bgColor, hoverBg, ringColor, titleColor;
+            switch(color) {
+                case 'emerald': bgColor='bg-emerald-50'; hoverBg='hover:bg-emerald-100'; ringColor='focus:ring-emerald-500'; titleColor='text-emerald-700'; break;
+                case 'blue': bgColor='bg-blue-50'; hoverBg='hover:bg-blue-100'; ringColor='focus:ring-blue-500'; titleColor='text-blue-700'; break;
+                case 'red': bgColor='bg-red-50'; hoverBg='hover:bg-red-100'; ringColor='focus:ring-red-500'; titleColor='text-red-700'; break;
+                case 'yellow': bgColor='bg-yellow-50'; hoverBg='hover:bg-yellow-100'; ringColor='focus:ring-yellow-500'; titleColor='text-yellow-700'; break;
+            }
+            return `
+                <div onclick="setCurrentView('${view}')" 
+                     class="group ${bgColor} p-6 rounded-xl shadow-lg border border-gray-200 cursor-pointer ${hoverBg} transition duration-200 transform hover:-translate-y-0.5 hover:shadow-xl focus:outline-none focus:ring-4 ${ringColor}">
+                    <div class="flex items-center mb-3">
+                        <svg class="w-8 h-8 ${titleColor}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="${path}"/>
+                        </svg>
+                        <h2 class="text-xl font-bold ml-3 ${titleColor} transition duration-200">${title}</h2>
+                    </div>
+                    <p class="text-gray-600 text-sm">${description}</p>
+                </div>
+            `;
+        }
+
+        /**
+         * Renders the structure for any individual tool view.
+         */
+        function renderToolView() {
+            let title = '';
+            let contentHtml = '';
+
+            switch (currentView) {
+                case 'TextAnalyzer':
+                    title = 'Real-Time Text Analyzer (Writing)';
+                    contentHtml = renderTextAnalyzer();
+                    break;
+                case 'TimeCoordinator':
+                    title = 'Universal Time Zone Coordinator (Scheduling)';
+                    contentHtml = renderTimeCoordinator();
+                    break;
+                case 'CommitmentCalculator':
+                    title = 'Commitment Cost Calculator (Prioritization)';
+                    contentHtml = renderCommitmentCalculator();
+                    break;
+                case 'CostEscalator':
+                    title = 'Recurring Cost Escalator (Finance)';
+                    contentHtml = renderCostEscalator();
+                    break;
+                default:
+                    return '';
+            }
+
+            return `
+                <div class="mb-4 flex items-center justify-between border-b pb-3">
+                    <h2 class="text-2xl font-bold text-gray-800">${title}</h2>
+                    <button onclick="setCurrentView('Dashboard')" 
+                            class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300 transition">
+                        ← Back to Toolkit
+                    </button>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    ${contentHtml}
+                </div>
+            `;
+        }
+        
+        // --- TOOL 1: REAL-TIME TEXT ANALYZER ---
+
+        const K1 = 206.835;
+        const K2 = 1.015;
+        const K3 = 84.6;
+        const WPM = 200;
+
+        function countSyllables(word) {
+            word = word.toLowerCase();
+            if (word.length <= 3) return 1;
+            word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
+            word = word.replace(/^y/, '');
+            const matches = word.match(/[aeiouy]{1,2}/g);
+            return matches ? matches.length : 1;
+        }
+
+        function getFleschInterpretation(score) {
+            if (score >= 90) return { text: "Very Easy (5th Grade level). Best for light reading.", color: "text-green-600" };
+            if (score >= 80) return { text: "Easy (6th Grade level). Suitable for mass-market content.", color: "text-green-500" };
+            if (score >= 70) return { text: "Fairly Easy (7th Grade level). Average newspaper or magazine readability.", color: "text-lime-600" };
+            if (score >= 60) return { text: "Standard (8th-9th Grade level). Ideal for general business content.", color: "text-yellow-600" };
+            if (score >= 50) return { text: "Fairly Difficult (10th-12th Grade level). Complex articles or academic writing.", color: "text-orange-600" };
+            if (score >= 30) return { text: "Difficult (College level). Technical or specialized content.", color: "text-red-600" };
+            if (score > 0) return { text: "Very Difficult (Graduate level). Highly academic or technical manuals.", color: "text-red-800" };
+            return { text: "Score not applicable. Input more text for calculation.", color: "text-gray-500" };
+        }
+
+        function analyzeText() {
+            const textInput = document.getElementById('text-analyzer-input');
+            if (!textInput) return; // Guard clause for when the tool isn't loaded
+
+            const text = textInput.value;
+            const wordCountEl = document.getElementById('text-analyzer-word-count');
+            const charCountEl = document.getElementById('text-analyzer-char-count');
+            const readTimeEl = document.getElementById('text-analyzer-read-time');
+            const fleschScoreEl = document.getElementById('text-analyzer-flesch-score');
+            const readabilityInfoEl = document.getElementById('text-analyzer-readability-info');
+
+            const charCount = text.length;
+            const words = text.match(/\b\w+\b/g) || [];
+            const wordCount = words.length;
+            const sentences = text.match(/[^\s](\.|!|\?)(?=\s|$)/g) || [];
+            const sentenceCount = sentences.length;
+
+            wordCountEl.textContent = wordCount;
+            charCountEl.textContent = charCount;
+
+            let readTime = (wordCount === 0) ? "0 min" : `${Math.ceil(wordCount / WPM)} min`;
+            readTimeEl.textContent = readTime;
+
+            if (wordCount > 10 && sentenceCount > 0) {
+                let totalSyllables = 0;
+                words.forEach(word => { totalSyllables += countSyllables(word); });
+                
+                const ASL = wordCount / sentenceCount;
+                const ASW = totalSyllables / wordCount;
+                let fleschScore = K1 - (K2 * ASL) - (K3 * ASW);
+                fleschScore = Math.max(0, Math.min(100, fleschScore));
+
+                const scoreText = fleschScore.toFixed(1);
+                const interpretation = getFleschInterpretation(fleschScore);
+
+                fleschScoreEl.textContent = scoreText;
+                readabilityInfoEl.className = `${interpretation.color} text-sm mt-1`;
+                readabilityInfoEl.textContent = `Score of ${scoreText}: ${interpretation.text}`;
+            } else {
+                fleschScoreEl.textContent = "N/A";
+                readabilityInfoEl.className = "text-gray-500 text-sm mt-1";
+                readabilityInfoEl.textContent = "Enter at least 10 words and one sentence to calculate readability.";
+            }
+        }
+
+        function initTextAnalyzer() {
+            const textInput = document.getElementById('text-analyzer-input');
+            if (textInput) {
+                textInput.addEventListener('input', analyzeText);
+                analyzeText(); // Initial run
+            }
+        }
+
+        function renderTextAnalyzer() {
+            return `
+                <p class="text-gray-500 mb-6">Type or paste your text below to get instant metrics on word count, reading time, and Flesch readability score.</p>
+                <textarea id="text-analyzer-input"
+                    rows="10"
+                    class="w-full p-4 text-lg border border-gray-300 rounded-xl shadow-inner focus:ring-emerald-500/50 focus:border-emerald-500 transition duration-150"
+                    placeholder="Start typing your content here..."
+                ></textarea>
+
+                <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    ${['Words', 'Characters', 'Reading Time', 'Readability (Flesch)'].map((label, index) => {
+                        const id = ['word-count', 'char-count', 'read-time', 'flesch-score'][index];
+                        const unit = (index === 2) ? ' min' : '';
+                        const initialValue = (index === 3) ? 'N/A' : '0';
+                        return `
+                            <div class="p-4 rounded-xl shadow-lg border border-gray-100 transition hover:shadow-xl">
+                                <p class="text-sm font-medium text-emerald-600">${label}</p>
+                                <p id="text-analyzer-${id}" class="text-3xl font-bold text-gray-900 mt-1">${initialValue}${unit}</p>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+
+                <div class="mt-6 p-4 bg-emerald-50 rounded-xl border border-emerald-200">
+                    <p class="font-semibold text-gray-700">Readability Interpretation:</p>
+                    <p id="text-analyzer-readability-info" class="text-gray-500 text-sm mt-1">Enter text to calculate Flesch Reading Ease.</p>
+                </div>
+            `;
+        }
+
+        // --- TOOL 2: UNIVERSAL TIME ZONE COORDINATOR ---
+        const TIME_ZONES = [
+            { id: 'none', label: '--- Select Zone (Optional) ---', offset: 0 },
+            { id: 'local', label: `Your Local Zone (${Intl.DateTimeFormat().resolvedOptions().timeZone})`, offset: 0 },
+            { id: 'UTC', label: 'UTC (Coordinated Universal Time)', offset: 0 },
+            { id: 'America/New_York', label: 'New York (EST/EDT)', offset: -5 },
+            { id: 'America/Los_Angeles', label: 'Los Angeles (PST/PDT)', offset: -8 },
+            { id: 'Europe/London', label: 'London (GMT/BST)', offset: 0 },
+            { id: 'Europe/Paris', label: 'Paris, Berlin, Rome (CET)', offset: 1 },
+            { id: 'Asia/Dubai', label: 'Dubai (GST)', offset: 4 },
+            { id: 'Asia/Kolkata', label: 'Mumbai, New Delhi (IST)', offset: 5.5 },
+            { id: 'Asia/Shanghai', label: 'Beijing, Shanghai', offset: 8 },
+            { id: 'Asia/Tokyo', label: 'Tokyo (JST)', offset: 9 },
+            { id: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)', offset: 10 },
+            { id: 'Pacific/Auckland', label: 'Auckland (NZST/NZDT)', offset: 12 },
+        ];
+        const TZ_SELECT_IDS = ['tz-base-zone-select', 'tz-zone-1-select', 'tz-zone-2-select', 'tz-zone-3-select'];
+
+        function populateTimezoneSelectors() {
+            TZ_SELECT_IDS.forEach(id => {
+                const select = document.getElementById(id);
+                if (!select) return;
+                
+                select.innerHTML = ''; 
+                TIME_ZONES.forEach(zone => {
+                    const option = document.createElement('option');
+                    option.value = zone.id;
+                    option.textContent = zone.label;
+                    select.appendChild(option);
+                });
+
+                if (id === 'tz-base-zone-select') {
+                    select.value = 'local';
+                } else if (id === 'tz-zone-1-select') {
+                    select.value = 'Europe/London'; 
+                } else if (id === 'tz-zone-2-select') {
+                    select.value = 'America/New_York'; 
+                }
+            });
+        }
+        
+        function formatTime(date, timeZone, showMinutes = false) {
+            const options = {
+                hour: 'numeric', 
+                minute: showMinutes ? '2-digit' : undefined,
+                hour12: true, 
+                timeZone: timeZone 
+            };
+            return date.toLocaleTimeString('en-US', options).replace(/ AM| PM/, (m) => m.toLowerCase());
+        }
+
+        function getZoneLabel(zoneId) {
+            const match = TIME_ZONES.find(z => z.id === zoneId);
+            if (match && match.id !== 'local') return match.label.split('(')[0].trim();
+            if (zoneId === Intl.DateTimeFormat().resolvedOptions().timeZone) return 'Your Time';
+            return zoneId.split('/').pop().replace(/_/g, ' ');
+        }
+        
+        function generateSchedule() {
+            const SCHEDULE_HEADER = document.getElementById('tz-schedule-header');
+            const SCHEDULE_BODY = document.getElementById('tz-schedule-body');
+            
+            if (!SCHEDULE_HEADER || !SCHEDULE_BODY) return; // Guard
+
+            SCHEDULE_HEADER.innerHTML = '';
+            SCHEDULE_BODY.innerHTML = '';
+
+            const selectedZones = [];
+            TZ_SELECT_IDS.forEach(id => {
+                const selectEl = document.getElementById(id);
+                const zoneId = selectEl.value;
+                if (zoneId && zoneId !== 'none') {
+                    const finalZoneId = zoneId === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : zoneId;
+                    selectedZones.push(finalZoneId);
+                }
+            });
+
+            if (selectedZones.length === 0) {
+                SCHEDULE_BODY.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Please select at least one time zone.</td></tr>';
+                return;
+            }
+
+            let headerHtml = '<tr><th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Base Time</th>';
+            selectedZones.forEach(zoneId => {
+                const zoneLabel = getZoneLabel(zoneId);
+                headerHtml += `<th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${zoneLabel}</th>`;
+            });
+            headerHtml += '</tr>';
+            SCHEDULE_HEADER.innerHTML = headerHtml;
+
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinute = now.getMinutes();
+
+            for (let i = 0; i < 48; i++) { // 48 half-hour slots
+                const baseTime = new Date(now);
+                // Adjust minutes to the nearest half hour slot from the current time
+                baseTime.setMinutes(currentMinute - (currentMinute % 30) + (i * 30)); 
+                
+                const baseMinute = baseTime.getMinutes();
+                const isCurrent = i === 0; // Highlight the very first row (closest half-hour slot to now)
+
+                let finalRowHtml = `<tr class="hover:bg-gray-50 ${isCurrent ? 'font-semibold current-hour-border bg-blue-50' : ''}">`;
+                
+                selectedZones.forEach((zoneId) => {
+                    const targetTime = new Date(baseTime.toLocaleString('en-US', { timeZone: zoneId }));
+                    const targetHour = targetTime.getHours();
+                    const isWorkingHour = targetHour >= 9 && targetHour < 17; // 9 AM to 5 PM (17:00)
+
+                    const timeFormatted = formatTime(baseTime, zoneId, baseMinute !== 0);
+                    
+                    let cellClass = isWorkingHour ? 'work-hour-bg' : 'bg-white';
+                    
+                    if (isCurrent && selectedZones[0] === zoneId) { // Highlight the current time cell in the base zone
+                        cellClass = 'bg-blue-100 font-bold';
+                    } else if (isCurrent) {
+                         cellClass += ' font-bold'; // Bold other times for the current slot
+                    }
+
+                    finalRowHtml += `<td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900 ${cellClass}">${timeFormatted}</td>`;
+                });
+
+                finalRowHtml += '</tr>';
+                SCHEDULE_BODY.innerHTML += finalRowHtml;
+            }
+        }
+        
+        function initTimeCoordinator() {
+            populateTimezoneSelectors();
+            generateSchedule();
+
+            TZ_SELECT_IDS.forEach(id => {
+                const selectEl = document.getElementById(id);
+                if(selectEl) selectEl.addEventListener('change', generateSchedule);
+            });
+        }
+
+        function renderTimeCoordinator() {
+            const selectorHtml = TZ_SELECT_IDS.map((id, index) => `
+                <div class="flex flex-col">
+                    <label for="${id}" class="text-sm font-medium text-gray-600 mb-1">${index === 0 ? 'Your Base Zone (Reference)' : 'Comparison Zone ' + index}</label>
+                    <select id="${id}" class="p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"></select>
+                </div>
+            `).join('');
+
+            return `
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">1. Select Time Zones</h3>
+                    <div id="timezone-selectors" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        ${selectorHtml}
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">2. Coordinated Schedule</h3>
+                    <div id="schedule-container" class="overflow-x-auto border rounded-lg shadow-inner">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead id="tz-schedule-header" class="bg-gray-50 sticky top-0 z-10"></thead>
+                            <tbody id="tz-schedule-body" class="bg-white divide-y divide-gray-100"></tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        <p>Highlighted rows (<span class="inline-block w-4 h-4 rounded-sm work-hour-bg border border-blue-200 mr-1"></span>) indicate standard working hours (9 AM - 5 PM) in that specific zone.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- TOOL 3: COMMITMENT COST CALCULATOR ---
+
+        function getElement(id) { return document.getElementById(`cc-${id}`); }
+        
+        function updateMetrics() {
+            const timeCost = parseInt(getElement('time-cost').value);
+            const energyDrain = parseInt(getElement('energy-drain').value);
+            const reward = parseInt(getElement('intrinsic-reward').value);
+
+            getElement('time-cost-value').textContent = timeCost;
+            getElement('energy-drain-value').textContent = energyDrain;
+            getElement('intrinsic-reward-value').textContent = reward;
+
+            const weightedCost = timeCost * energyDrain;
+            const decisionScore = reward - weightedCost;
+
+            getElement('weighted-cost').textContent = weightedCost;
+            getElement('raw-reward').textContent = reward;
+            getElement('decision-score').textContent = decisionScore;
+            
+            const scoreEl = getElement('decision-score');
+            scoreEl.classList.remove('text-red-700', 'text-gray-700', 'text-green-700');
+
+            let header = "";
+            let text = "";
+            let boxClass = "bg-white";
+
+            if (decisionScore >= 10) {
+                header = "Strong GO: High Value, Low Cost";
+                text = "This commitment is clearly beneficial and represents a high-reward, manageable-risk opportunity. Proceed with confidence!";
+                boxClass = "bg-green-100 border-l-4 border-green-500";
+                scoreEl.classList.add('text-green-700');
+            } else if (decisionScore > 0 && decisionScore < 10) {
+                header = "GO: Positive Alignment";
+                text = "The reward slightly outweighs the weighted cost. Accept, but monitor your energy levels to prevent burnout.";
+                boxClass = "bg-lime-100 border-l-4 border-lime-500";
+                scoreEl.classList.add('text-green-700');
+            } else if (decisionScore === 0) {
+                header = "NEUTRAL: Balanced Risk";
+                text = "The cost perfectly matches the reward. The decision rests on whether you have available bandwidth and truly desire the experience.";
+                boxClass = "bg-yellow-100 border-l-4 border-yellow-500";
+                scoreEl.classList.add('text-gray-700');
+            } else if (decisionScore > -5 && decisionScore < 0) {
+                header = "CAUTION: Minor Negative Cost";
+                text = "The cost is slightly higher than the reward. Consider negotiating the scope or delegating parts before accepting.";
+                boxClass = "bg-orange-100 border-l-4 border-orange-500";
+                scoreEl.classList.add('text-red-700');
+            } else { // decisionScore <= -5
+                header = "Strong NO: High Opportunity Cost";
+                text = "The weighted cost significantly outweighs the reward. This task carries a high risk of burnout or derailing other priorities. Strongly consider declining.";
+                boxClass = "bg-red-100 border-l-4 border-red-500";
+                scoreEl.classList.add('text-red-700');
+            }
+
+            getElement('recommendation-box').className = `mt-6 p-4 rounded-lg transition duration-300 shadow-md ${boxClass}`;
+            getElement('recommendation-header').textContent = header;
+            getElement('recommendation-text').textContent = text;
+        }
+
+        function initCommitmentCalculator() {
+            const inputs = ['time-cost', 'energy-drain', 'intrinsic-reward'];
+            inputs.forEach(id => {
+                const el = getElement(id);
+                if(el) el.addEventListener('input', updateMetrics);
+            });
+            updateMetrics(); // Initial run
+        }
+
+        function renderCommitmentCalculator() {
+            return `
+                <div class="mb-4">
+                    <label for="cc-task-name" class="block text-sm font-medium text-gray-600 mb-1">What is the commitment?</label>
+                    <input type="text" id="cc-task-name" placeholder="e.g., Lead the Q4 presentation, Attend John's party"
+                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition shadow-sm">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="flex flex-col">
+                        <label for="cc-time-cost" class="text-sm font-medium text-gray-600 mb-2 flex justify-between items-center">
+                            Total Time Cost (Hours)
+                            <span id="cc-time-cost-value" class="font-bold text-lg text-blue-600">5</span>
+                        </label>
+                        <input type="range" id="cc-time-cost" min="1" max="50" value="5" class="cursor-pointer">
+                        <p class="text-xs text-gray-400 mt-1">Estimate total hours required.</p>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="cc-energy-drain" class="text-sm font-medium text-gray-600 mb-2 flex justify-between items-center">
+                            Energy Drain (1=Low, 10=High)
+                            <span id="cc-energy-drain-value" class="font-bold text-lg text-red-600">5</span>
+                        </label>
+                        <input type="range" id="cc-energy-drain" min="1" max="10" value="5" class="cursor-pointer">
+                        <p class="text-xs text-gray-400 mt-1">How exhausting is this task?</p>
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="cc-intrinsic-reward" class="text-sm font-medium text-gray-600 mb-2 flex justify-between items-center">
+                            Intrinsic Reward (1=Low, 10=High)
+                            <span id="cc-intrinsic-reward-value" class="font-bold text-lg text-green-600">5</span>
+                        </label>
+                        <input type="range" id="cc-intrinsic-reward" min="1" max="10" value="5" class="cursor-pointer">
+                        <p class="text-xs text-gray-400 mt-1">Career, learning, or personal benefit.</p>
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-4 border-t border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Decision Analysis</h3>
+                    <div class="grid grid-cols-3 gap-4 text-center">
+                        <div class="p-3 bg-gray-50 rounded-lg border">
+                            <p class="text-xs font-medium text-gray-500">Weighted Cost</p>
+                            <p id="cc-weighted-cost" class="text-2xl font-extrabold text-red-700 mt-1">25</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border">
+                            <p class="text-xs font-medium text-gray-500">Raw Reward</p>
+                            <p id="cc-raw-reward" class="text-2xl font-extrabold text-green-700 mt-1">5</p>
+                        </div>
+                        <div class="p-3 bg-gray-50 rounded-lg border">
+                            <p class="text-xs font-medium text-gray-500">Decision Score</p>
+                            <p id="cc-decision-score" class="text-2xl font-extrabold text-blue-700 mt-1">N/A</p>
+                        </div>
+                    </div>
+                    <div class="mt-6 p-4 rounded-lg transition duration-300 shadow-md" id="cc-recommendation-box">
+                        <p class="font-semibold text-lg text-gray-800" id="cc-recommendation-header">Initial Setup</p>
+                        <p id="cc-recommendation-text" class="text-gray-600 mt-1">Adjust the sliders above to calculate the score and see a recommendation.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // --- TOOL 4: RECURRING COST ESCALATOR ---
+
+        const DAYS_IN_YEAR = 365.25;
+        const WEEKS_IN_YEAR = 52.14;
+        const MONTHS_IN_YEAR = 12;
+
+        function getElementEscalator(id) { return document.getElementById(`ce-${id}`); }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            }).format(amount);
+        }
+
+        function calculateAnnualCost(cost, frequency) {
+            switch (frequency) {
+                case 'D': return cost * DAYS_IN_YEAR;
+                case 'W': return cost * WEEKS_IN_YEAR;
+                case 'M': return cost * MONTHS_IN_YEAR;
+                case 'Y': return cost;
+                default: return 0;
+            }
+        }
+
+        function calculateFutureValue(annualContribution, rate, years) {
+            if (rate === 0) {
+                return annualContribution * years;
+            }
+            const factor = (Math.pow(1 + rate, years) - 1) / rate;
+            const futureValue = annualContribution * factor * (1 + rate);
+            return futureValue;
+        }
+
+        function updateEscalatorRateDisplay() {
+            const rate = getElementEscalator('investment-rate').value;
+            getElementEscalator('rate-value').textContent = `${rate}%`;
+        }
+
+        function calculateCost() {
+            const cost = parseFloat(getElementEscalator('cost-amount').value);
+            const frequency = getElementEscalator('cost-frequency').value;
+            const annualRate = parseFloat(getElementEscalator('investment-rate').value) / 100;
+
+            if (isNaN(cost) || cost <= 0) {
+                alertModal("Please enter a valid cost greater than zero.", "Input Error");
+                return;
+            }
+
+            const annualContribution = calculateAnnualCost(cost, frequency);
+            
+            getElementEscalator('results-output').classList.remove('hidden');
+            getElementEscalator('annual-spending').textContent = formatCurrency(annualContribution);
+            
+            const projections = [5, 10, 20];
+            projections.forEach(years => {
+                const costUninvested = annualContribution * years;
+                const growthInvested = calculateFutureValue(annualContribution, annualRate, years);
+
+                getElementEscalator(`cost-${years}-years`).textContent = formatCurrency(costUninvested);
+                getElementEscalator(`growth-${years}-years`).textContent = formatCurrency(growthInvested);
+            });
+        }
+        
+        function initCostEscalator() {
+            const amountEl = getElementEscalator('cost-amount');
+            const freqEl = getElementEscalator('cost-frequency');
+            const rateEl = getElementEscalator('investment-rate');
+
+            if (amountEl && freqEl && rateEl) {
+                amountEl.addEventListener('input', calculateCost);
+                freqEl.addEventListener('change', calculateCost);
+                rateEl.addEventListener('input', () => {
+                    updateEscalatorRateDisplay();
+                    calculateCost();
+                });
+                updateEscalatorRateDisplay();
+                calculateCost(); // Initial run
+            }
+        }
+
+        function renderCostEscalator() {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="flex flex-col">
+                        <label for="ce-cost-amount" class="text-sm font-medium text-gray-600 mb-1">Cost Per Purchase ($)</label>
+                        <input type="number" id="ce-cost-amount" value="5" min="1" step="0.5"
+                               class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition shadow-sm text-lg font-bold">
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="ce-cost-frequency" class="text-sm font-medium text-gray-600 mb-1">Frequency</label>
+                        <select id="ce-cost-frequency" 
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition shadow-sm text-lg font-medium">
+                            <option value="D">Daily (e.g., coffee, lunch)</option>
+                            <option value="W">Weekly (e.g., takeout, subscription)</option>
+                            <option value="M" selected>Monthly (e.g., streaming, membership)</option>
+                            <option value="Y">Annually (e.g., software license)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col">
+                        <label for="ce-investment-rate" class="text-sm font-medium text-gray-600 mb-2 flex justify-between items-center">
+                            Estimated Annual Return (%)
+                            <span id="ce-rate-value" class="font-bold text-lg text-red-600">7%</span>
+                        </label>
+                        <input type="range" id="ce-investment-rate" min="1" max="15" value="7" step="0.5" class="cursor-pointer">
+                        <p class="text-xs text-gray-400 mt-1">Typical stock market average is 7-10%.</p>
+                    </div>
+                </div>
+                
+                <button onclick="calculateCost()"
+                        class="mt-6 w-full py-3 bg-red-600 text-white font-bold rounded-lg shadow-md hover:bg-red-700 transition duration-150 transform hover:scale-[1.005] focus:outline-none focus:ring-4 focus:ring-red-500/50">
+                    Calculate Opportunity Cost
+                </button>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Cost Projection and Investment Growth</h3>
+                    
+                    <div id="ce-results-output" class="hidden">
+                        <div class="p-6 rounded-xl shadow-lg border border-gray-200">
+                            <div class="text-center mb-6 p-4 bg-red-50 rounded-lg">
+                                <p class="text-sm font-semibold text-red-700 uppercase">Annual Spending (Uninvested)</p>
+                                <p id="ce-annual-spending" class="text-3xl font-extrabold text-red-800 mt-1">$0.00</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                ${[5, 10, 20].map(years => `
+                                    <div class="flex flex-col sm:flex-row items-center justify-between p-4 bg-gray-50 rounded-lg ${years === 20 ? 'border-2 border-emerald-400' : ''}">
+                                        <span class="text-lg font-semibold text-gray-700 w-full sm:w-1/4 mb-2 sm:mb-0">${years} Years ${years === 20 ? '(Retirement Horizon)' : ''}</span>
+                                        <div class="flex flex-col w-full sm:w-3/4 sm:flex-row sm:space-x-4">
+                                            <div class="w-full sm:w-1/2 p-2 bg-red-100 rounded-lg">
+                                                <p class="text-xs text-red-700">Cost (Uninvested)</p>
+                                                <p id="ce-cost-${years}-years" class="text-xl font-bold text-red-800">$0.00</p>
+                                            </div>
+                                            <div class="w-full sm:w-1/2 mt-2 sm:mt-0 p-2 ${years === 20 ? 'bg-green-200' : 'bg-green-100'} rounded-lg">
+                                                <p class="text-xs text-green-700">Opportunity Cost (Invested)</p>
+                                                <p id="ce-growth-${years}-years" class="text-xl font-bold text-green-800 ${years === 20 ? 'text-2xl font-extrabold' : ''}">$0.00</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- GLOBAL UTILITIES (SHARED BY MULTIPLE TOOLS) ---
+
+        function alertModal(message, title) {
+            let modal = document.getElementById('custom-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'custom-modal';
+                modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300';
+                modal.innerHTML = `
+                    <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full transform scale-100 transition-transform">
+                        <h3 class="text-xl font-bold text-gray-800 mb-3" id="modal-title"></h3>
+                        <p class="text-gray-600 mb-4" id="modal-message"></p>
+                        <button onclick="document.getElementById('custom-modal').remove()"
+                                class="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            OK
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            }
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+        }
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', renderApp);
+
+    </script>
+</body>
+</html>

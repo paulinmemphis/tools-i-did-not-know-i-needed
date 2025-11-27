@@ -1,0 +1,26 @@
+{
+  "name": "The Cognitive Toolkit",
+  "short_name": "CognitiveKit",
+  "description": "Four essential utilities for better decisions, coordination, and knowledge retention",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fb",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192' fill='%232563eb'%3E%3Cpath d='M96 32a64 64 0 1 1 0 128 64 64 0 0 1 0-128zm0 16a48 48 0 1 0 0 96 48 48 0 0 0 0-96zm0 16a32 32 0 1 1 0 64 32 32 0 0 1 0-64z'/%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512' fill='%232563eb'%3E%3Cpath d='M256 64a192 192 0 1 1 0 384 192 192 0 0 1 0-384zm0 32a160 160 0 1 0 0 320 160 160 0 0 0 0-320zm0 32a128 128 0 1 1 0 256 128 128 0 0 1 0-256z'/%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["productivity", "utilities", "business"],
+  "lang": "en-US",
+  "scope": "/",
+  "prefer_related_applications": false
+}
