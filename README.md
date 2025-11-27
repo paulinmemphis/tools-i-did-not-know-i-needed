@@ -198,6 +198,24 @@ tools-i-did-not-know-i-needed/
 - ✅ Enhanced calculations and visualizations
 
 ### v1.0.0 (Original Edition)
+
+## 🛡️ UI & Security Updates (2025-11-27)
+
+This repository recently received a focused UI polish and a security hardening pass. Changes are small and non-breaking, and aim to improve usability and reduce attack surface.
+
+- UI Improvements
+    - Reworked dashboard tool cards with a cleaner two-column layout, consistent icon tiles, and improved spacing.
+    - Replaced decorative emojis with an inline SVG sprite for consistent, accessible icons.
+    - Polished typography (scales, line-height) and refined button/card elevation for a more professional look.
+    - Added keyboard affordances and clearer action hints (press Enter to open a tool).
+
+- Security Hardening
+    - Introduced a SecurityManager with strong input validation and sanitized DOM construction (no unsanitized innerHTML usage).
+    - Content Security Policy headers and SRI were added for external resources where applicable.
+    - Replaced dynamic template string insertions with safe element creation and attribute sanitization.
+    - Removed inline execution vectors and hardened event handlers to avoid template injection.
+
+If you want a staged changelog or a separate `SECURITY.md` with technical details (attack vectors, patches applied, and remediation steps), I can add it to the repository.
 - ✅ Basic text analyzer with Flesch readability
 - ✅ Time zone coordinator for meeting planning
 - ✅ Commitment cost calculator for decision making
