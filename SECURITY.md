@@ -1,3 +1,92 @@
+# SECURITY.md
+
+Last updated: 2025-11-27
+
+Overview
+--------
+This document summarizes the security hardening work performed on the Cognitive Toolkit repository and records safe-development guidance and verification steps.
+
+Summary of fixes
+-----------------
+- Replaced all unsanitized DOM/HTML insertions (innerHTML / template strings) with safe DOM construction via a `SecurityManager.createElement()` helper.
+- Implemented a centralized `SecurityManager.validateInput()` and `sanitizeHTML()` functions to canonicalize inputs and escape dangerous characters.
+- Removed any inline JavaScript template injection vectors and string-based event handlers; all handlers are assigned as functions.
+- Added Content Security Policy (CSP) meta header and used Subresource Integrity (SRI) on external resources where possible.
+- Hardened local storage usage with key validation and size limits to avoid storage abuse and reduce data exfiltration risk.
+- Enforced maximum input lengths, disallowed unexpected HTML in untrusted inputs, and returned sanitized fallback values where necessary.
+
+Details of major vulnerabilities addressed
+---------------------------------------
+1. Cross-Site Scripting (XSS)
+   - Root cause: user-provided content was being injected into the DOM using innerHTML or unescaped template strings.
+   - Fix: removed all `innerHTML` assignments. Inputs are sanitized via `sanitizeHTML()` before being placed into the DOM using `textContent` or via programmatic element creation.
+   - Verification: manual inspection for remaining `innerHTML` uses and automated scanning (see Recommendations).
+
+2. Template / Event Injection
+   - Root cause: building attributes or inline event handlers using template strings containing user-controlled data.
+   - Fix: event handlers are now attached as functions (e.g., `element.onclick = () => { ... }`). Attributes and IDs are sanitized using a strict attribute scrubber.
+
+3. Untrusted External Dependencies
+   - Root cause: external scripts and styles were loaded without integrity checks.
+   - Fix: added SRI and crossorigin attributes for CDN usage where possible. Critical scripts have onerror fallbacks.
+
+4. Insecure Local Storage Usage
+   - Root cause: arbitrary large data could be saved to localStorage without limits.
+   - Fix: `StorageManager.set()` enforces a JSON string length limit (1MB) and validates storage keys. Keys are namespaced (prefix `cognitiveToolkit_`).
+
+Key files changed (high level)
+-----------------------------
+- `secure.html` — first security-hardening pass (sanitization primitives, CSP, SRI placeholders).
+- `complete-toolkit.html` — completed application with secure DOM APIs, sanitized inputs, and removed innerHTML usage.
+- `SECURITY_REPORT.md` — technical vulnerability report (if present in repo).
+
+Protective guardrails included
+-----------------------------
+- Input validation: length, allowed characters, and HTML presence checks.
+- Safe element creation: never set innerHTML with untrusted content.
+- CSP: meta-level policy restricting default-src and script/style origins.
+- SRI: integrity attributes on external CDN scripts.
+- Storage limits: per-key size guard and max-history caps.
+- No analytics by default; analytics flag disabled in configuration.
+
+Developer guidance & best practices
+----------------------------------
+1. Never use `innerHTML` with untrusted data. Prefer `textContent` or safe element creation.
+2. Always validate and sanitize inputs on client and server side. Treat client-side sanitization as UX-level and server-side as authoritative.
+3. Use CSP headers (not just meta tags) from the server whenever possible; meta CSP is a fallback for static hosting.
+4. Lock down third-party scripts with SRI and restrict `crossorigin` where appropriate.
+5. Keep third-party libraries up-to-date and subscribe to CVE feeds for critical deps.
+6. Limit persisted data volume and avoid storing secrets in localStorage.
+7. Prefer declarative frameworks with built-in escaping (React, Vue) for large UI codebases.
+
+How to audit this repository
+---------------------------
+1. Static scan: run an SAST tool that checks for `innerHTML`, `eval`, `new Function`, and other dynamic execution patterns.
+2. Dynamic scan: use an interactive security scanner (e.g., OWASP ZAP) against a running instance to locate XSS and injection vectors.
+3. CSP verification: test whether the CSP blocks known-injection payloads.
+4. Manual code review focused on any new features that touch DOM insertion or external resource loading.
+
+Quick verification checklist
+---------------------------
+- [ ] No `innerHTML` usages in committed files (search repository).
+- [ ] All external scripts referenced include an `integrity` attribute or are served from a trusted origin.
+- [ ] LocalStorage keys are namespaced and limited in size.
+- [ ] Event handlers are assigned directly (not via inline strings).
+
+Contact & disclosure
+---------------------
+If you discover a security issue, please open an issue labeled `security` or contact the repository owner directly. If you need a private disclosure channel, I can help draft an email template for responsible disclosure.
+
+Appendix — Example secure patterns
+----------------------------------
+// Safe element creation
+const el = SecurityManager.createElement('div', { id: 'my-id', textContent: userText });
+
+// Safe attribute assignment
+el.setAttribute('data-user', SecurityManager.sanitizeAttribute(userValue));
+
+// Safe storage
+StorageManager.set('preferences', { theme: 'dark' });
 # SECURITY PATCH: Enhanced Cognitive Toolkit
 
 ## Critical Security Vulnerabilities Fixed
