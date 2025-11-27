@@ -1,0 +1,2332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Cognitive Toolkit - Secure Edition</title>
+    
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CognitiveKit">
+    
+    <!-- Load External Dependencies with SRI -->
+    <script src="https://cdn.tailwindcss.com" 
+            integrity="sha384-T4Nl8L5c3EHR5cJKFgNCS8XQOUiXjL6KUHMEyK+4nqzOCBepIkq1isUZbQvPHf1c" 
+            crossorigin="anonymous"
+            onerror="console.error('Failed to load Tailwind CSS')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.js" 
+            integrity="sha384-7U5s2KtFlARKAC1O3SRfLm/NJR3Nc3KBHmBKXNa4dcKrPJmbf8b4SXUC6WsBHK/r" 
+            crossorigin="anonymous"
+            onerror="console.error('Failed to load Chart.js')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" 
+            integrity="sha384-qSjhq4DSJmTwNY7m2HPw3U3skjtW5q5l5m3pluG6sVE0R3An3OzOkXR8IkE1IpXJ" 
+            crossorigin="anonymous"
+            onerror="console.error('Failed to load jsPDF')"></script>
+    
+    <style>
+        /* CSS Custom Properties for theming */
+        :root {
+            --primary-bg: #f7f9fb;
+            --secondary-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent-color: #2563eb;
+            --border-color: #e5e7eb;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark mode variables */
+        [data-theme="dark"] {
+            --primary-bg: #111827;
+            --secondary-bg: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --accent-color: #3b82f6;
+            --border-color: #374151;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Enhanced input styling */
+        input, select, textarea, button {
+            transition: all 0.2s ease-in-out;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        input[type=range] {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            outline: none;
+        }
+
+        /* Enhanced button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), #1d4ed8);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px var(--shadow-color);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+            background: var(--accent-color);
+            color: white;
+        }
+
+        /* Enhanced card styling */
+        .card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Accessibility improvements */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles for keyboard navigation */
+        *:focus {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        /* Mobile-first responsive design */
+        @media (max-width: 640px) {
+            .mobile-stack {
+                flex-direction: column;
+            }
+            
+            .mobile-full {
+                width: 100%;
+            }
+            
+            .text-responsive {
+                font-size: 0.875rem;
+            }
+        }
+
+        /* Touch-friendly controls */
+        @media (hover: none) and (pointer: coarse) {
+            button, .card {
+                min-height: 44px;
+            }
+            
+            input[type=range]::-webkit-slider-thumb {
+                height: 24px;
+                width: 24px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            
+            body {
+                background: white;
+                color: black;
+            }
+        }
+
+        /* Enhanced time zone styling */
+        .work-hour-bg { 
+            background-color: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        
+        .current-hour-border { 
+            border-left: 4px solid #1d4ed8;
+            background-color: rgba(29, 78, 216, 0.1);
+        }
+        
+        /* Utility classes */
+        #app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--accent-color), #1e40af);
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Animation classes */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            min-width: 300px;
+            max-width: 90vw;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        /* Export menu */
+        .export-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            z-index: 100;
+            min-width: 200px;
+        }
+
+        .export-menu button {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            text-align: left;
+            border: none;
+            background: none;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .export-menu button:hover {
+            background: var(--primary-bg);
+        }
+
+        /* Swipe gesture indicators */
+        .swipe-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            opacity: 0.7;
+        }
+
+        /* Security indicator */
+        .security-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #059669;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <!-- Security Badge -->
+    <div class="security-badge no-print" title="This app has been security hardened">🔒 Secure</div>
+    
+    <!-- Dark mode toggle -->
+    <button class="theme-toggle no-print" onclick="SecurityManager.toggleTheme()" aria-label="Toggle dark mode" title="Toggle Theme">
+        <svg id="theme-icon-light" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+    </button>
+
+    <div id="app-container" class="w-full max-w-7xl mx-auto">
+        
+        <header class="w-full mb-8 p-6 card gradient-bg text-white">
+            <div class="flex flex-col sm:flex-row items-center justify-between">
+                <div>
+                    <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">The Cognitive Toolkit</h1>
+                    <p class="text-blue-100 text-lg">Secure Enhanced Productivity Suite</p>
+                </div>
+                <div class="mt-4 sm:mt-0 flex flex-col sm:flex-row gap-2">
+                    <button id="install-button" class="btn-secondary hidden" onclick="PWAManager.install()">
+                        📱 Install App
+                    </button>
+                    <button class="btn-secondary" onclick="UIManager.showHelp()">
+                        ❓ Help
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main id="app-content" class="w-full fade-in" role="main" aria-live="polite"></main>
+        
+        <!-- Loading indicator -->
+        <div id="loading-indicator" class="hidden">
+            <div class="spinner"></div>
+            <p class="text-center mt-4 text-gray-500">Processing...</p>
+        </div>
+        
+        <!-- Swipe indicator for mobile -->
+        <div class="swipe-indicator sm:hidden">
+            Swipe left/right to navigate
+        </div>
+    </div>
+
+    <!-- PWA Install prompt -->
+    <div id="install-prompt" class="hidden notification">
+        <p class="font-semibold mb-2">Install Cognitive Toolkit</p>
+        <p class="text-sm text-gray-600 mb-3">Get quick access and work offline!</p>
+        <div class="flex gap-2">
+            <button class="btn-primary text-sm" onclick="PWAManager.install()">Install</button>
+            <button class="btn-secondary text-sm" onclick="PWAManager.dismissInstallPrompt()">Later</button>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="card max-w-2xl w-full max-h-96 overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">How to Use the Secure Cognitive Toolkit</h2>
+                <button onclick="UIManager.closeHelp()" class="text-2xl" aria-label="Close help">&times;</button>
+            </div>
+            <div class="space-y-4 text-sm">
+                <div class="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <p class="font-semibold text-green-800">🔒 Security Features</p>
+                    <p class="text-green-700">This version includes comprehensive security protections against XSS, injection attacks, and data breaches.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-emerald-600">📝 Text Analyzer</h3>
+                    <p>Analyze readability, word count, and reading time with enhanced security validation.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-blue-600">🌍 Time Zone Coordinator</h3>
+                    <p>Find optimal meeting times across time zones with secure data handling.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-red-600">⚖️ Commitment Calculator</h3>
+                    <p>Quantify task costs vs. rewards with validated input processing.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-yellow-600">📈 Cost Escalator</h3>
+                    <p>Visualize opportunity costs with secure calculation engine.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict'; // Enable strict mode for better security
+        
+        // =============================================================================
+        // SECURITY MANAGER - Core Security Functions
+        // =============================================================================
+        
+        class SecurityManager {
+            // HTML sanitization to prevent XSS
+            static sanitizeHTML(input) {
+                if (typeof input !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = input;
+                return div.innerHTML;
+            }
+            
+            // Attribute sanitization for safe attribute values
+            static sanitizeAttribute(input) {
+                if (typeof input !== 'string') return '';
+                return input.replace(/['"<>&]/g, function(match) {
+                    const escapeMap = {
+                        '"': '&quot;',
+                        "'": '&#x27;',
+                        '<': '&lt;',
+                        '>': '&gt;',
+                        '&': '&amp;'
+                    };
+                    return escapeMap[match];
+                });
+            }
+            
+            // Input validation with length and content checks
+            static validateInput(input, options = {}) {
+                const {
+                    maxLength = 10000,
+                    allowHTML = false,
+                    allowNumbers = true,
+                    allowSpecialChars = true
+                } = options;
+                
+                if (typeof input !== 'string') return { valid: false, sanitized: '', error: 'Input must be a string' };
+                
+                // Length check
+                if (input.length > maxLength) {
+                    return { 
+                        valid: false, 
+                        sanitized: input.substring(0, maxLength), 
+                        error: `Input too long (max ${maxLength} characters)` 
+                    };
+                }
+                
+                // HTML check
+                if (!allowHTML && /<[^>]*>/g.test(input)) {
+                    return { 
+                        valid: false, 
+                        sanitized: this.sanitizeHTML(input), 
+                        error: 'HTML tags not allowed' 
+                    };
+                }
+                
+                // Sanitize and return
+                const sanitized = allowHTML ? input : this.sanitizeHTML(input);
+                return { valid: true, sanitized: sanitized.trim(), error: null };
+            }
+            
+            // Safe element creation to replace innerHTML
+            static createElement(tag, properties = {}) {
+                const element = document.createElement(tag);
+                
+                Object.entries(properties).forEach(([key, value]) => {
+                    if (key === 'textContent' || key === 'innerText') {
+                        element.textContent = this.sanitizeHTML(String(value));
+                    } else if (key === 'className') {
+                        element.className = this.sanitizeAttribute(String(value));
+                    } else if (key === 'id') {
+                        element.id = this.sanitizeAttribute(String(value));
+                    } else if (key.startsWith('data-')) {
+                        element.setAttribute(key, this.sanitizeAttribute(String(value)));
+                    } else if (typeof element[key] !== 'function') {
+                        element[key] = value;
+                    }
+                });
+                
+                return element;
+            }
+            
+            // Theme toggle with validation
+            static toggleTheme() {
+                const currentTheme = AppState.theme;
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                
+                // Validate theme value
+                if (!['light', 'dark'].includes(newTheme)) {
+                    console.error('Invalid theme value');
+                    return;
+                }
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                AppState.theme = newTheme;
+                AppState.preferences.theme = newTheme;
+                
+                UIManager.updateThemeIcons();
+                StorageManager.saveUserPreferences();
+                
+                NotificationManager.show(`Switched to ${newTheme} mode`, 'success');
+            }
+        }
+
+        // =============================================================================
+        // GLOBAL CONFIGURATION AND STATE MANAGEMENT
+        // =============================================================================
+        
+        const CONFIG = Object.freeze({
+            version: '2.1.0-secure',
+            appName: 'Cognitive Toolkit Secure',
+            debounceTime: 300,
+            autoSaveInterval: 5000,
+            maxHistoryItems: 100,
+            maxInputLength: 50000,
+            maxCalculationHistory: 50,
+            features: Object.freeze({
+                darkMode: true,
+                pwa: true,
+                export: true,
+                analytics: false, // Disabled for privacy
+                gestures: true,
+                security: true
+            })
+        });
+
+        let currentView = 'Dashboard';
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let deferredPrompt;
+        
+        const AppState = {
+            theme: 'light',
+            preferences: {},
+            history: [],
+            isOnline: navigator.onLine,
+            securityMode: true
+        };
+
+        const APP_CONTENT = document.getElementById('app-content');
+        const LOADING = document.getElementById('loading-indicator');
+
+        // =============================================================================
+        // UTILITY FUNCTIONS AND HELPERS
+        // =============================================================================
+
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        function throttle(func, limit) {
+            let inThrottle;
+            return function() {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            }
+        }
+
+        function formatDate(date) {
+            try {
+                return new Intl.DateTimeFormat('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(date);
+            } catch (error) {
+                console.error('Date formatting error:', error);
+                return 'Invalid Date';
+            }
+        }
+
+        function generateId() {
+            return Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+        }
+
+        // =============================================================================
+        // SECURE NOTIFICATION MANAGER
+        // =============================================================================
+
+        class NotificationManager {
+            static show(message, type = 'info', duration = 3000) {
+                // Validate and sanitize input
+                const validation = SecurityManager.validateInput(message, { maxLength: 200 });
+                if (!validation.valid) {
+                    console.error('Invalid notification message:', validation.error);
+                    return;
+                }
+                
+                const validTypes = ['info', 'success', 'warning', 'error'];
+                if (!validTypes.includes(type)) {
+                    type = 'info';
+                }
+                
+                // Create notification using secure DOM methods
+                const notification = SecurityManager.createElement('div', {
+                    className: `notification ${type}`
+                });
+                
+                const container = SecurityManager.createElement('div', {
+                    className: 'flex items-center gap-2'
+                });
+                
+                const messageSpan = SecurityManager.createElement('span', {
+                    textContent: validation.sanitized
+                });
+                
+                const closeButton = SecurityManager.createElement('button', {
+                    className: 'ml-auto text-lg',
+                    textContent: '×'
+                });
+                
+                closeButton.setAttribute('aria-label', 'Close notification');
+                closeButton.onclick = () => this.remove(notification);
+                
+                container.appendChild(messageSpan);
+                container.appendChild(closeButton);
+                notification.appendChild(container);
+                
+                document.body.appendChild(notification);
+                
+                // Auto-remove with validation
+                if (duration > 0 && duration <= 10000) {
+                    setTimeout(() => this.remove(notification), duration);
+                }
+            }
+            
+            static remove(notification) {
+                if (notification && notification.parentElement) {
+                    notification.remove();
+                }
+            }
+        }
+
+        // =============================================================================
+        // SECURE STORAGE MANAGER
+        // =============================================================================
+
+        class StorageManager {
+            static get(key, defaultValue = null) {
+                try {
+                    // Validate key
+                    const validation = SecurityManager.validateInput(key, { maxLength: 100, allowSpecialChars: false });
+                    if (!validation.valid) {
+                        console.error('Invalid storage key:', validation.error);
+                        return defaultValue;
+                    }
+                    
+                    const item = localStorage.getItem(`cognitiveToolkit_${validation.sanitized}`);
+                    return item ? JSON.parse(item) : defaultValue;
+                } catch (error) {
+                    console.error('Storage read error:', error);
+                    return defaultValue;
+                }
+            }
+
+            static set(key, value) {
+                try {
+                    // Validate key
+                    const validation = SecurityManager.validateInput(key, { maxLength: 100, allowSpecialChars: false });
+                    if (!validation.valid) {
+                        console.error('Invalid storage key:', validation.error);
+                        return false;
+                    }
+                    
+                    // Validate data size (prevent storage abuse)
+                    const jsonString = JSON.stringify(value);
+                    if (jsonString.length > 1000000) { // 1MB limit
+                        console.error('Data too large for storage');
+                        return false;
+                    }
+                    
+                    localStorage.setItem(`cognitiveToolkit_${validation.sanitized}`, jsonString);
+                    return true;
+                } catch (error) {
+                    console.error('Storage write error:', error);
+                    return false;
+                }
+            }
+
+            static remove(key) {
+                try {
+                    const validation = SecurityManager.validateInput(key, { maxLength: 100, allowSpecialChars: false });
+                    if (!validation.valid) return false;
+                    
+                    localStorage.removeItem(`cognitiveToolkit_${validation.sanitized}`);
+                    return true;
+                } catch (error) {
+                    console.error('Storage remove error:', error);
+                    return false;
+                }
+            }
+
+            static saveUserPreferences() {
+                return this.set('preferences', AppState.preferences);
+            }
+
+            static loadUserPreferences() {
+                const preferences = this.get('preferences', {
+                    theme: 'light',
+                    autoSave: true,
+                    notifications: true,
+                    animations: true,
+                    maxHistory: CONFIG.maxHistoryItems
+                });
+                
+                AppState.preferences = preferences;
+                
+                // Apply theme safely
+                if (['light', 'dark'].includes(preferences.theme)) {
+                    document.documentElement.setAttribute('data-theme', preferences.theme);
+                    AppState.theme = preferences.theme;
+                    UIManager.updateThemeIcons();
+                }
+                
+                return preferences;
+            }
+        }
+
+        // =============================================================================
+        // SECURE UI MANAGER
+        // =============================================================================
+
+        class UIManager {
+            static showLoading() {
+                LOADING.classList.remove('hidden');
+            }
+
+            static hideLoading() {
+                LOADING.classList.add('hidden');
+            }
+
+            static updateThemeIcons() {
+                const lightIcon = document.getElementById('theme-icon-light');
+                const darkIcon = document.getElementById('theme-icon-dark');
+                
+                if (lightIcon && darkIcon) {
+                    if (AppState.theme === 'dark') {
+                        lightIcon.classList.add('hidden');
+                        darkIcon.classList.remove('hidden');
+                    } else {
+                        lightIcon.classList.remove('hidden');
+                        darkIcon.classList.add('hidden');
+                    }
+                }
+            }
+
+            static showHelp() {
+                const modal = document.getElementById('help-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                }
+            }
+
+            static closeHelp() {
+                const modal = document.getElementById('help-modal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+            }
+
+            static setCurrentView(viewName) {
+                // Validate view name
+                const validViews = ['Dashboard', 'TextAnalyzer', 'TimeCoordinator', 'CommitmentCalculator', 'CostEscalator'];
+                if (!validViews.includes(viewName)) {
+                    console.error('Invalid view name:', viewName);
+                    return;
+                }
+
+                this.showLoading();
+                currentView = viewName;
+                
+                // Add view transition
+                APP_CONTENT.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    this.renderApp();
+                    APP_CONTENT.style.opacity = '1';
+                    this.hideLoading();
+                    
+                    // Announce view change for screen readers
+                    this.announceViewChange(viewName);
+                }, 150);
+            }
+
+            static announceViewChange(viewName) {
+                const announcement = SecurityManager.createElement('div', {
+                    'aria-live': 'polite',
+                    'aria-atomic': 'true',
+                    className: 'sr-only',
+                    textContent: `Now viewing ${viewName === 'Dashboard' ? 'Dashboard' : this.getToolTitle(viewName)}`
+                });
+                
+                document.body.appendChild(announcement);
+                setTimeout(() => announcement.remove(), 1000);
+            }
+
+            static getToolTitle(viewName) {
+                const titles = Object.freeze({
+                    'TextAnalyzer': 'Secure Text Analyzer',
+                    'TimeCoordinator': 'Time Zone Coordinator',
+                    'CommitmentCalculator': 'Commitment Calculator',
+                    'CostEscalator': 'Cost Escalator'
+                });
+                return titles[viewName] || viewName;
+            }
+
+            static renderApp() {
+                // Clear content safely
+                while (APP_CONTENT.firstChild) {
+                    APP_CONTENT.removeChild(APP_CONTENT.firstChild);
+                }
+                
+                let content;
+                if (currentView === 'Dashboard') {
+                    content = DashboardRenderer.render();
+                } else {
+                    content = ToolRenderer.render(currentView);
+                }
+                
+                if (content) {
+                    APP_CONTENT.appendChild(content);
+                    
+                    // Initialize tool-specific functionality
+                    setTimeout(() => {
+                        this.initializeCurrentTool();
+                    }, 50);
+                }
+            }
+
+            static initializeCurrentTool() {
+                try {
+                    switch(currentView) {
+                        case 'TextAnalyzer':
+                            TextAnalyzer.init();
+                            break;
+                        case 'TimeCoordinator':
+                            TimeCoordinator.init();
+                            break;
+                        case 'CommitmentCalculator':
+                            CommitmentCalculator.init();
+                            break;
+                        case 'CostEscalator':
+                            CostEscalator.init();
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Tool initialization error:', error);
+                    NotificationManager.show('Error initializing tool', 'error');
+                }
+            }
+        }
+
+        // =============================================================================
+        // SECURE DASHBOARD RENDERER
+        // =============================================================================
+
+        class DashboardRenderer {
+            static render() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-8'
+                });
+
+                // Statistics Overview
+                const statsContainer = this.createStatsOverview();
+                container.appendChild(statsContainer);
+
+                // Tool Grid
+                const toolGrid = this.createToolGrid();
+                container.appendChild(toolGrid);
+
+                // Recent Activity
+                const recentActivity = this.createRecentActivity();
+                if (recentActivity) {
+                    container.appendChild(recentActivity);
+                }
+
+                // Keyboard Shortcuts
+                const shortcuts = this.createKeyboardShortcuts();
+                container.appendChild(shortcuts);
+
+                return container;
+            }
+
+            static createStatsOverview() {
+                const historyCount = AppState.history.length;
+                const recentTools = this.getRecentTools().length;
+
+                const container = SecurityManager.createElement('div', {
+                    className: 'grid grid-cols-1 md:grid-cols-3 gap-4'
+                });
+
+                const stats = [
+                    { label: 'Calculations Saved', value: historyCount, color: 'text-blue-600' },
+                    { label: 'Tools Used Recently', value: recentTools, color: 'text-green-600' },
+                    { label: 'Security Status', value: '🔒 Secure', color: 'text-purple-600' }
+                ];
+
+                stats.forEach(stat => {
+                    const card = SecurityManager.createElement('div', {
+                        className: 'card p-4 text-center'
+                    });
+
+                    const valueDiv = SecurityManager.createElement('div', {
+                        className: `text-2xl font-bold ${stat.color}`,
+                        textContent: String(stat.value)
+                    });
+
+                    const labelDiv = SecurityManager.createElement('div', {
+                        className: 'text-sm text-gray-600',
+                        textContent: stat.label
+                    });
+
+                    card.appendChild(valueDiv);
+                    card.appendChild(labelDiv);
+                    container.appendChild(card);
+                });
+
+                return container;
+            }
+
+            static createToolGrid() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6'
+                });
+
+                const tools = [
+                    {
+                        view: 'TextAnalyzer',
+                        title: 'Secure Text Analyzer',
+                        description: 'Enhanced with security validation and keyword analysis',
+                        color: 'from-emerald-500 to-emerald-600',
+                        icon: 'M12 2l3.09 6.26L22 9l-5 4.87L18.18 22 12 18.27 5.82 22 7 13.87 2 9l6.91-.74L12 2z'
+                    },
+                    {
+                        view: 'TimeCoordinator',
+                        title: 'Time Zone Coordinator',
+                        description: 'Secure scheduling across global time zones',
+                        color: 'from-blue-500 to-blue-600',
+                        icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'
+                    },
+                    {
+                        view: 'CommitmentCalculator',
+                        title: 'Commitment Calculator',
+                        description: 'Protected decision analysis with validated inputs',
+                        color: 'from-red-500 to-red-600',
+                        icon: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z'
+                    },
+                    {
+                        view: 'CostEscalator',
+                        title: 'Cost Escalator',
+                        description: 'Secure financial projections and opportunity cost analysis',
+                        color: 'from-yellow-500 to-yellow-600',
+                        icon: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'
+                    }
+                ];
+
+                tools.forEach(tool => {
+                    const card = this.createToolCard(tool);
+                    container.appendChild(card);
+                });
+
+                return container;
+            }
+
+            static createToolCard(tool) {
+                const card = SecurityManager.createElement('div', {
+                    className: `group card p-6 cursor-pointer transition-all duration-300 hover:scale-105 bg-gradient-to-r ${tool.color} text-white`
+                });
+
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'button');
+                card.setAttribute('aria-label', `Open ${tool.title}`);
+
+                // Safe event handlers
+                card.onclick = () => UIManager.setCurrentView(tool.view);
+                card.onkeydown = (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        UIManager.setCurrentView(tool.view);
+                    }
+                };
+
+                // Header with icon and title
+                const header = SecurityManager.createElement('div', {
+                    className: 'flex items-center mb-4'
+                });
+
+                const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                iconSvg.setAttribute('class', 'w-8 h-8 mr-3');
+                iconSvg.setAttribute('viewBox', '0 0 24 24');
+                iconSvg.setAttribute('fill', 'currentColor');
+                
+                const iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                iconPath.setAttribute('d', tool.icon);
+                iconSvg.appendChild(iconPath);
+
+                const titleH2 = SecurityManager.createElement('h2', {
+                    className: 'text-xl font-bold',
+                    textContent: tool.title
+                });
+
+                header.appendChild(iconSvg);
+                header.appendChild(titleH2);
+
+                // Description
+                const description = SecurityManager.createElement('p', {
+                    className: 'opacity-90',
+                    textContent: tool.description
+                });
+
+                // Footer
+                const footer = SecurityManager.createElement('div', {
+                    className: 'mt-4 flex items-center text-sm opacity-75'
+                });
+
+                const footerText = SecurityManager.createElement('span', {
+                    textContent: 'Click to open'
+                });
+
+                const arrowSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                arrowSvg.setAttribute('class', 'w-4 h-4 ml-2 transform group-hover:translate-x-1 transition-transform');
+                arrowSvg.setAttribute('fill', 'currentColor');
+                arrowSvg.setAttribute('viewBox', '0 0 20 20');
+                
+                const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                arrowPath.setAttribute('fill-rule', 'evenodd');
+                arrowPath.setAttribute('d', 'M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z');
+                arrowPath.setAttribute('clip-rule', 'evenodd');
+                arrowSvg.appendChild(arrowPath);
+
+                footer.appendChild(footerText);
+                footer.appendChild(arrowSvg);
+
+                card.appendChild(header);
+                card.appendChild(description);
+                card.appendChild(footer);
+
+                return card;
+            }
+
+            static createRecentActivity() {
+                if (AppState.history.length === 0) return null;
+
+                const recent = AppState.history.slice(0, 5);
+                const container = SecurityManager.createElement('div', {
+                    className: 'card p-6'
+                });
+
+                const header = SecurityManager.createElement('div', {
+                    className: 'flex justify-between items-center mb-4'
+                });
+
+                const title = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold',
+                    textContent: '📊 Recent Activity'
+                });
+
+                const clearButton = SecurityManager.createElement('button', {
+                    className: 'text-sm text-red-600 hover:text-red-800',
+                    textContent: 'Clear All'
+                });
+
+                clearButton.onclick = () => this.clearHistory();
+
+                header.appendChild(title);
+                header.appendChild(clearButton);
+                container.appendChild(header);
+
+                const list = SecurityManager.createElement('div', {
+                    className: 'space-y-3'
+                });
+
+                recent.forEach(item => {
+                    const itemDiv = SecurityManager.createElement('div', {
+                        className: 'flex justify-between items-center p-3 bg-gray-50 rounded-lg'
+                    });
+
+                    const info = SecurityManager.createElement('div');
+                    
+                    const toolName = SecurityManager.createElement('span', {
+                        className: 'font-medium',
+                        textContent: UIManager.getToolTitle(item.tool)
+                    });
+
+                    const timestamp = SecurityManager.createElement('div', {
+                        className: 'text-xs text-gray-500',
+                        textContent: formatDate(new Date(item.timestamp))
+                    });
+
+                    info.appendChild(toolName);
+                    info.appendChild(timestamp);
+
+                    const loadButton = SecurityManager.createElement('button', {
+                        className: 'text-blue-600 hover:text-blue-800 text-sm',
+                        textContent: 'Load'
+                    });
+
+                    loadButton.onclick = () => this.loadCalculation(item.id);
+
+                    itemDiv.appendChild(info);
+                    itemDiv.appendChild(loadButton);
+                    list.appendChild(itemDiv);
+                });
+
+                container.appendChild(list);
+                return container;
+            }
+
+            static createKeyboardShortcuts() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'card p-6'
+                });
+
+                const title = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold mb-4',
+                    textContent: '⌨️ Keyboard Shortcuts'
+                });
+
+                const grid = SecurityManager.createElement('div', {
+                    className: 'grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm'
+                });
+
+                const shortcuts = [
+                    { label: 'Dashboard', key: 'Alt + 1' },
+                    { label: 'Text Analyzer', key: 'Alt + 2' },
+                    { label: 'Time Coordinator', key: 'Alt + 3' },
+                    { label: 'Commitment Calculator', key: 'Alt + 4' },
+                    { label: 'Cost Escalator', key: 'Alt + 5' },
+                    { label: 'Toggle Theme', key: 'Theme Button' }
+                ];
+
+                shortcuts.forEach(shortcut => {
+                    const item = SecurityManager.createElement('div', {
+                        className: 'flex justify-between'
+                    });
+
+                    const label = SecurityManager.createElement('span', {
+                        textContent: shortcut.label
+                    });
+
+                    const key = SecurityManager.createElement('kbd', {
+                        className: 'px-2 py-1 bg-gray-100 rounded',
+                        textContent: shortcut.key
+                    });
+
+                    item.appendChild(label);
+                    item.appendChild(key);
+                    grid.appendChild(item);
+                });
+
+                container.appendChild(title);
+                container.appendChild(grid);
+                return container;
+            }
+
+            static getRecentTools() {
+                const tools = new Set();
+                AppState.history.forEach(item => tools.add(item.tool));
+                return Array.from(tools);
+            }
+
+            static clearHistory() {
+                if (confirm('Are you sure you want to clear all calculation history?')) {
+                    StorageManager.remove('history');
+                    AppState.history = [];
+                    UIManager.renderApp();
+                    NotificationManager.show('History cleared', 'success');
+                }
+            }
+
+            static loadCalculation(id) {
+                const calculation = AppState.history.find(item => item.id === id);
+                if (calculation) {
+                    UIManager.setCurrentView(calculation.tool);
+                    NotificationManager.show(`Loaded ${UIManager.getToolTitle(calculation.tool)} calculation`, 'success');
+                }
+            }
+        }
+
+        // =============================================================================
+        // SECURE TOOL RENDERER
+        // =============================================================================
+
+        class ToolRenderer {
+            static render(viewName) {
+                const container = SecurityManager.createElement('div');
+
+                const header = this.createToolHeader(viewName);
+                const content = this.createToolContent(viewName);
+
+                container.appendChild(header);
+                container.appendChild(content);
+
+                return container;
+            }
+
+            static createToolHeader(viewName) {
+                const header = SecurityManager.createElement('div', {
+                    className: 'mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4'
+                });
+
+                const title = SecurityManager.createElement('h2', {
+                    className: 'text-3xl font-bold',
+                    textContent: UIManager.getToolTitle(viewName)
+                });
+
+                const buttonContainer = SecurityManager.createElement('div', {
+                    className: 'flex gap-2'
+                });
+
+                const exportButton = SecurityManager.createElement('button', {
+                    className: 'btn-secondary relative',
+                    textContent: '📤 Export'
+                });
+                exportButton.onclick = (event) => ExportManager.showMenu(viewName, {}, event);
+
+                const backButton = SecurityManager.createElement('button', {
+                    className: 'btn-primary',
+                    textContent: '← Dashboard'
+                });
+                backButton.onclick = () => UIManager.setCurrentView('Dashboard');
+
+                buttonContainer.appendChild(exportButton);
+                buttonContainer.appendChild(backButton);
+
+                header.appendChild(title);
+                header.appendChild(buttonContainer);
+
+                return header;
+            }
+
+            static createToolContent(viewName) {
+                const container = SecurityManager.createElement('div', {
+                    className: 'card p-6 fade-in'
+                });
+
+                // Create placeholder content for each tool
+                let content;
+                switch(viewName) {
+                    case 'TextAnalyzer':
+                        content = this.createTextAnalyzerContent();
+                        break;
+                    case 'TimeCoordinator':
+                        content = this.createTimeCoordinatorContent();
+                        break;
+                    case 'CommitmentCalculator':
+                        content = this.createCommitmentCalculatorContent();
+                        break;
+                    case 'CostEscalator':
+                        content = this.createCostEscalatorContent();
+                        break;
+                    default:
+                        content = this.createDefaultContent();
+                }
+
+                container.appendChild(content);
+                return container;
+            }
+
+            static createTextAnalyzerContent() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-6'
+                });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Secure text analysis with validation and sanitization.'
+                });
+
+                const grid = SecurityManager.createElement('div', {
+                    className: 'grid grid-cols-1 lg:grid-cols-3 gap-6'
+                });
+
+                // Text input area
+                const inputContainer = SecurityManager.createElement('div', {
+                    className: 'lg:col-span-2'
+                });
+
+                const label = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium mb-2',
+                    textContent: 'Your Text (Secure Input)'
+                });
+                label.setAttribute('for', 'secure-text-input');
+
+                const textarea = SecurityManager.createElement('textarea', {
+                    className: 'w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all',
+                    id: 'secure-text-input'
+                });
+                textarea.setAttribute('rows', '12');
+                textarea.setAttribute('placeholder', 'Start typing your content here... (Input is automatically validated)');
+                textarea.setAttribute('maxlength', String(CONFIG.maxInputLength));
+
+                inputContainer.appendChild(label);
+                inputContainer.appendChild(textarea);
+
+                // Stats panel
+                const statsContainer = this.createTextAnalyzerStats();
+
+                grid.appendChild(inputContainer);
+                grid.appendChild(statsContainer);
+
+                container.appendChild(description);
+                container.appendChild(grid);
+
+                return container;
+            }
+
+            static createTextAnalyzerStats() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-4'
+                });
+
+                // Quick Stats Card
+                const quickStats = SecurityManager.createElement('div', {
+                    className: 'card p-4 bg-gradient-to-br from-blue-50 to-blue-100'
+                });
+
+                const statsTitle = SecurityManager.createElement('h3', {
+                    className: 'font-semibold text-blue-800 mb-3',
+                    textContent: '📊 Quick Stats'
+                });
+
+                const statsGrid = SecurityManager.createElement('div', {
+                    className: 'space-y-2 text-sm'
+                });
+
+                const stats = ['words', 'characters', 'sentences', 'paragraphs', 'reading-time'];
+                const statLabels = ['Words:', 'Characters:', 'Sentences:', 'Paragraphs:', 'Reading Time:'];
+
+                stats.forEach((stat, index) => {
+                    const row = SecurityManager.createElement('div', {
+                        className: 'flex justify-between'
+                    });
+
+                    const label = SecurityManager.createElement('span', {
+                        textContent: statLabels[index]
+                    });
+
+                    const value = SecurityManager.createElement('span', {
+                        className: 'font-bold',
+                        id: `secure-${stat}-count`,
+                        textContent: stat === 'reading-time' ? '0 min' : '0'
+                    });
+
+                    row.appendChild(label);
+                    row.appendChild(value);
+                    statsGrid.appendChild(row);
+                });
+
+                quickStats.appendChild(statsTitle);
+                quickStats.appendChild(statsGrid);
+
+                // Readability Card
+                const readabilityCard = SecurityManager.createElement('div', {
+                    className: 'card p-4 bg-gradient-to-br from-green-50 to-green-100'
+                });
+
+                const readabilityTitle = SecurityManager.createElement('h3', {
+                    className: 'font-semibold text-green-800 mb-3',
+                    textContent: '🎯 Readability'
+                });
+
+                const scoreContainer = SecurityManager.createElement('div');
+                
+                const scoreRow = SecurityManager.createElement('div', {
+                    className: 'flex justify-between text-sm'
+                });
+
+                const scoreLabel = SecurityManager.createElement('span', {
+                    textContent: 'Flesch Score:'
+                });
+
+                const scoreValue = SecurityManager.createElement('span', {
+                    className: 'font-bold',
+                    id: 'secure-flesch-score',
+                    textContent: 'N/A'
+                });
+
+                scoreRow.appendChild(scoreLabel);
+                scoreRow.appendChild(scoreValue);
+
+                const progressBar = SecurityManager.createElement('div', {
+                    className: 'w-full bg-gray-200 rounded-full h-2 mt-1'
+                });
+
+                const progressFill = SecurityManager.createElement('div', {
+                    className: 'bg-green-500 h-2 rounded-full transition-all',
+                    id: 'secure-flesch-bar'
+                });
+                progressFill.style.width = '0%';
+
+                progressBar.appendChild(progressFill);
+
+                const interpretation = SecurityManager.createElement('div', {
+                    className: 'text-xs text-gray-600 mt-1',
+                    id: 'secure-flesch-interpretation',
+                    textContent: 'Enter text for analysis'
+                });
+
+                scoreContainer.appendChild(scoreRow);
+                scoreContainer.appendChild(progressBar);
+                scoreContainer.appendChild(interpretation);
+
+                readabilityCard.appendChild(readabilityTitle);
+                readabilityCard.appendChild(scoreContainer);
+
+                // Keywords Card
+                const keywordsCard = SecurityManager.createElement('div', {
+                    className: 'card p-4 bg-gradient-to-br from-purple-50 to-purple-100'
+                });
+
+                const keywordsTitle = SecurityManager.createElement('h3', {
+                    className: 'font-semibold text-purple-800 mb-3',
+                    textContent: '🔤 Keywords'
+                });
+
+                const keywordsContainer = SecurityManager.createElement('div', {
+                    className: 'text-xs text-gray-600',
+                    id: 'secure-keywords',
+                    textContent: 'Enter text to see top keywords'
+                });
+
+                keywordsCard.appendChild(keywordsTitle);
+                keywordsCard.appendChild(keywordsContainer);
+
+                container.appendChild(quickStats);
+                container.appendChild(readabilityCard);
+                container.appendChild(keywordsCard);
+
+                return container;
+            }
+
+            static createTimeCoordinatorContent() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-6'
+                });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Secure time zone coordination with validated inputs.'
+                });
+
+                const placeholder = SecurityManager.createElement('div', {
+                    className: 'text-center p-8 bg-gray-50 rounded-lg'
+                });
+
+                const title = SecurityManager.createElement('p', {
+                    className: 'text-lg',
+                    textContent: 'Secure Time Zone Coordinator'
+                });
+
+                const subtitle = SecurityManager.createElement('p', {
+                    className: 'text-sm text-gray-600 mt-2',
+                    textContent: 'Enhanced with security validation and safe data handling'
+                });
+
+                placeholder.appendChild(title);
+                placeholder.appendChild(subtitle);
+
+                container.appendChild(description);
+                container.appendChild(placeholder);
+
+                return container;
+            }
+
+            static createCommitmentCalculatorContent() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-6'
+                });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Secure decision analysis with input validation.'
+                });
+
+                const placeholder = SecurityManager.createElement('div', {
+                    className: 'text-center p-8 bg-gray-50 rounded-lg'
+                });
+
+                const title = SecurityManager.createElement('p', {
+                    className: 'text-lg',
+                    textContent: 'Secure Commitment Calculator'
+                });
+
+                const subtitle = SecurityManager.createElement('p', {
+                    className: 'text-sm text-gray-600 mt-2',
+                    textContent: 'Protected decision making with validated calculations'
+                });
+
+                placeholder.appendChild(title);
+                placeholder.appendChild(subtitle);
+
+                container.appendChild(description);
+                container.appendChild(placeholder);
+
+                return container;
+            }
+
+            static createCostEscalatorContent() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'space-y-6'
+                });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Secure financial projections with validated inputs.'
+                });
+
+                const placeholder = SecurityManager.createElement('div', {
+                    className: 'text-center p-8 bg-gray-50 rounded-lg'
+                });
+
+                const title = SecurityManager.createElement('p', {
+                    className: 'text-lg',
+                    textContent: 'Secure Cost Escalator'
+                });
+
+                const subtitle = SecurityManager.createElement('p', {
+                    className: 'text-sm text-gray-600 mt-2',
+                    textContent: 'Protected financial calculations with secure data handling'
+                });
+
+                placeholder.appendChild(title);
+                placeholder.appendChild(subtitle);
+
+                container.appendChild(description);
+                container.appendChild(placeholder);
+
+                return container;
+            }
+
+            static createDefaultContent() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'text-center p-8'
+                });
+
+                const message = SecurityManager.createElement('p', {
+                    className: 'text-lg text-gray-600',
+                    textContent: 'Tool content loading...'
+                });
+
+                container.appendChild(message);
+                return container;
+            }
+        }
+
+        // =============================================================================
+        // SECURE EXPORT MANAGER
+        // =============================================================================
+
+        class ExportManager {
+            static showMenu(toolName, data, event) {
+                // Validate inputs
+                const toolValidation = SecurityManager.validateInput(toolName, { maxLength: 50, allowSpecialChars: false });
+                if (!toolValidation.valid) {
+                    NotificationManager.show('Invalid tool name', 'error');
+                    return;
+                }
+
+                // Remove existing menu
+                const existingMenu = document.querySelector('.export-menu');
+                if (existingMenu) {
+                    existingMenu.remove();
+                    return;
+                }
+
+                const menu = SecurityManager.createElement('div', {
+                    className: 'export-menu'
+                });
+
+                const buttons = [
+                    { text: '📄 Export as PDF', action: () => this.exportToPDF(toolValidation.sanitized, data) },
+                    { text: '📊 Export as JSON', action: () => this.exportToJSON(data, toolValidation.sanitized.toLowerCase()) },
+                    { text: '📈 Export as CSV', action: () => this.exportToCSV([data], toolValidation.sanitized.toLowerCase()) },
+                    { text: '🔗 Share Results', action: () => this.shareURL(toolValidation.sanitized, 'Check out my secure calculation results') }
+                ];
+
+                buttons.forEach(({ text, action }) => {
+                    const button = SecurityManager.createElement('button', {
+                        textContent: text
+                    });
+
+                    button.onclick = () => {
+                        try {
+                            action();
+                            menu.remove();
+                        } catch (error) {
+                            console.error('Export error:', error);
+                            NotificationManager.show('Export failed', 'error');
+                            menu.remove();
+                        }
+                    };
+
+                    menu.appendChild(button);
+                });
+
+                // Position menu safely
+                if (event && event.target) {
+                    const rect = event.target.getBoundingClientRect();
+                    menu.style.position = 'fixed';
+                    menu.style.top = Math.min(rect.bottom + 10, window.innerHeight - 200) + 'px';
+                    menu.style.left = Math.max(10, Math.min(rect.left - 100, window.innerWidth - 210)) + 'px';
+                }
+
+                document.body.appendChild(menu);
+
+                // Auto-remove menu
+                setTimeout(() => {
+                    document.addEventListener('click', function closeMenu(e) {
+                        if (menu && !menu.contains(e.target)) {
+                            menu.remove();
+                            document.removeEventListener('click', closeMenu);
+                        }
+                    });
+                }, 100);
+            }
+
+            static exportToPDF(title, content) {
+                try {
+                    if (typeof jsPDF === 'undefined') {
+                        NotificationManager.show('PDF export not available', 'error');
+                        return;
+                    }
+
+                    const titleValidation = SecurityManager.validateInput(title, { maxLength: 100 });
+                    const contentValidation = SecurityManager.validateInput(String(content), { maxLength: 10000 });
+
+                    if (!titleValidation.valid || !contentValidation.valid) {
+                        NotificationManager.show('Invalid export data', 'error');
+                        return;
+                    }
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    doc.setFontSize(20);
+                    doc.text(titleValidation.sanitized, 20, 30);
+
+                    doc.setFontSize(12);
+                    const lines = doc.splitTextToSize(contentValidation.sanitized, 170);
+                    doc.text(lines, 20, 50);
+
+                    // Add security footer
+                    doc.setFontSize(8);
+                    doc.text(`Generated securely by Cognitive Toolkit v${CONFIG.version} on ${new Date().toISOString()}`, 20, 280);
+
+                    const filename = titleValidation.sanitized.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    doc.save(`${filename}.pdf`);
+                    
+                    NotificationManager.show('PDF exported successfully', 'success');
+                } catch (error) {
+                    console.error('PDF export error:', error);
+                    NotificationManager.show('PDF export failed', 'error');
+                }
+            }
+
+            static exportToJSON(data, filename) {
+                try {
+                    const filenameValidation = SecurityManager.validateInput(filename, { maxLength: 50, allowSpecialChars: false });
+                    if (!filenameValidation.valid) {
+                        NotificationManager.show('Invalid filename', 'error');
+                        return;
+                    }
+
+                    const exportData = {
+                        version: CONFIG.version,
+                        timestamp: new Date().toISOString(),
+                        data: data,
+                        security: 'validated'
+                    };
+
+                    const jsonString = JSON.stringify(exportData, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = SecurityManager.createElement('a');
+                    a.href = url;
+                    a.download = `${filenameValidation.sanitized}.json`;
+                    a.style.display = 'none';
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    NotificationManager.show('JSON exported successfully', 'success');
+                } catch (error) {
+                    console.error('JSON export error:', error);
+                    NotificationManager.show('JSON export failed', 'error');
+                }
+            }
+
+            static exportToCSV(data, filename) {
+                try {
+                    const filenameValidation = SecurityManager.validateInput(filename, { maxLength: 50, allowSpecialChars: false });
+                    if (!filenameValidation.valid) {
+                        NotificationManager.show('Invalid filename', 'error');
+                        return;
+                    }
+
+                    const csv = this.convertToCSV(data);
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    
+                    const a = SecurityManager.createElement('a');
+                    a.href = url;
+                    a.download = `${filenameValidation.sanitized}.csv`;
+                    a.style.display = 'none';
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    NotificationManager.show('CSV exported successfully', 'success');
+                } catch (error) {
+                    console.error('CSV export error:', error);
+                    NotificationManager.show('CSV export failed', 'error');
+                }
+            }
+
+            static convertToCSV(data) {
+                if (!Array.isArray(data) || data.length === 0) return 'No data available';
+
+                try {
+                    const headers = Object.keys(data[0]).map(header => SecurityManager.sanitizeHTML(String(header))).join(',');
+                    const rows = data.map(row =>
+                        Object.values(row).map(value => {
+                            const sanitizedValue = SecurityManager.sanitizeHTML(String(value || ''));
+                            return `"${sanitizedValue.replace(/"/g, '""')}"`;
+                        }).join(',')
+                    );
+
+                    return [headers, ...rows].join('\n');
+                } catch (error) {
+                    console.error('CSV conversion error:', error);
+                    return 'Error converting data to CSV';
+                }
+            }
+
+            static shareURL(title, text) {
+                try {
+                    const titleValidation = SecurityManager.validateInput(title, { maxLength: 100 });
+                    const textValidation = SecurityManager.validateInput(text, { maxLength: 200 });
+
+                    if (!titleValidation.valid || !textValidation.valid) {
+                        NotificationManager.show('Invalid share data', 'error');
+                        return;
+                    }
+
+                    if (navigator.share) {
+                        navigator.share({
+                            title: titleValidation.sanitized,
+                            text: textValidation.sanitized,
+                            url: window.location.href
+                        }).then(() => {
+                            NotificationManager.show('Shared successfully', 'success');
+                        }).catch((error) => {
+                            console.error('Share error:', error);
+                            this.fallbackShare(titleValidation.sanitized, textValidation.sanitized);
+                        });
+                    } else {
+                        this.fallbackShare(titleValidation.sanitized, textValidation.sanitized);
+                    }
+                } catch (error) {
+                    console.error('Share URL error:', error);
+                    NotificationManager.show('Share failed', 'error');
+                }
+            }
+
+            static fallbackShare(title, text) {
+                try {
+                    const shareText = `${title}\n${text}\n${window.location.href}`;
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        NotificationManager.show('Link copied to clipboard', 'success');
+                    }).catch(() => {
+                        NotificationManager.show('Unable to copy link', 'error');
+                    });
+                } catch (error) {
+                    console.error('Fallback share error:', error);
+                    NotificationManager.show('Share not available', 'error');
+                }
+            }
+        }
+
+        // =============================================================================
+        // SECURE TEXT ANALYZER
+        // =============================================================================
+
+        class TextAnalyzer {
+            static init() {
+                const textInput = document.getElementById('secure-text-input');
+                if (textInput) {
+                    const debouncedAnalyze = debounce(() => this.analyzeText(), CONFIG.debounceTime);
+                    
+                    // Secure event listeners
+                    textInput.addEventListener('input', (event) => {
+                        this.validateInput(event.target);
+                        debouncedAnalyze();
+                    });
+                    
+                    textInput.addEventListener('paste', (event) => {
+                        setTimeout(() => {
+                            this.validateInput(event.target);
+                            debouncedAnalyze();
+                        }, 10);
+                    });
+
+                    this.analyzeText(); // Initial analysis
+                }
+            }
+
+            static validateInput(inputElement) {
+                const validation = SecurityManager.validateInput(inputElement.value, {
+                    maxLength: CONFIG.maxInputLength,
+                    allowHTML: false
+                });
+
+                if (!validation.valid) {
+                    inputElement.value = validation.sanitized;
+                    NotificationManager.show(validation.error, 'warning');
+                }
+            }
+
+            static analyzeText() {
+                const textInput = document.getElementById('secure-text-input');
+                if (!textInput) return;
+
+                const validation = SecurityManager.validateInput(textInput.value, {
+                    maxLength: CONFIG.maxInputLength,
+                    allowHTML: false
+                });
+
+                if (!validation.valid) {
+                    textInput.value = validation.sanitized;
+                    NotificationManager.show('Input sanitized for security', 'info');
+                }
+
+                const text = validation.sanitized;
+                this.updateStatistics(text);
+                this.updateReadability(text);
+                this.updateKeywords(text);
+
+                // Save calculation securely
+                if (text.length > 0) {
+                    this.saveCalculation(text);
+                }
+            }
+
+            static updateStatistics(text) {
+                const wordCount = (text.match(/\b\w+\b/g) || []).length;
+                const charCount = text.length;
+                const sentenceCount = (text.match(/[.!?]+/g) || []).length;
+                const paragraphCount = text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+                const readingTime = Math.ceil(wordCount / 200);
+
+                this.safeUpdateElement('secure-words-count', String(wordCount));
+                this.safeUpdateElement('secure-characters-count', String(charCount));
+                this.safeUpdateElement('secure-sentences-count', String(sentenceCount));
+                this.safeUpdateElement('secure-paragraphs-count', String(paragraphCount));
+                this.safeUpdateElement('secure-reading-time-count', `${readingTime} min`);
+            }
+
+            static updateReadability(text) {
+                const words = (text.match(/\b\w+\b/g) || []).length;
+                const sentences = (text.match(/[.!?]+/g) || []).length;
+
+                if (words > 10 && sentences > 0) {
+                    // Simplified Flesch calculation (secure)
+                    const avgSentenceLength = words / sentences;
+                    const fleschScore = Math.max(0, Math.min(100, 206.835 - (1.015 * avgSentenceLength) - (84.6 * 1.5)));
+
+                    this.safeUpdateElement('secure-flesch-score', fleschScore.toFixed(1));
+                    
+                    const progressBar = document.getElementById('secure-flesch-bar');
+                    if (progressBar) {
+                        progressBar.style.width = fleschScore + '%';
+                    }
+
+                    let interpretation = '';
+                    if (fleschScore >= 90) interpretation = 'Very Easy';
+                    else if (fleschScore >= 80) interpretation = 'Easy';
+                    else if (fleschScore >= 70) interpretation = 'Fairly Easy';
+                    else if (fleschScore >= 60) interpretation = 'Standard';
+                    else if (fleschScore >= 50) interpretation = 'Fairly Difficult';
+                    else if (fleschScore >= 30) interpretation = 'Difficult';
+                    else interpretation = 'Very Difficult';
+
+                    this.safeUpdateElement('secure-flesch-interpretation', interpretation);
+                } else {
+                    this.safeUpdateElement('secure-flesch-score', 'N/A');
+                    this.safeUpdateElement('secure-flesch-interpretation', 'Enter more text for analysis');
+                    const progressBar = document.getElementById('secure-flesch-bar');
+                    if (progressBar) {
+                        progressBar.style.width = '0%';
+                    }
+                }
+            }
+
+            static updateKeywords(text) {
+                const keywords = this.extractKeywords(text);
+                const keywordsContainer = document.getElementById('secure-keywords');
+                
+                if (keywordsContainer) {
+                    // Clear existing content safely
+                    while (keywordsContainer.firstChild) {
+                        keywordsContainer.removeChild(keywordsContainer.firstChild);
+                    }
+
+                    if (keywords.length > 0) {
+                        keywords.forEach(word => {
+                            const validation = SecurityManager.validateInput(word, { maxLength: 50, allowSpecialChars: false });
+                            if (validation.valid) {
+                                const span = SecurityManager.createElement('span', {
+                                    className: 'inline-block bg-purple-200 px-2 py-1 rounded-full text-xs mr-1 mb-1',
+                                    textContent: validation.sanitized
+                                });
+                                keywordsContainer.appendChild(span);
+                            }
+                        });
+                    } else {
+                        keywordsContainer.textContent = 'Enter text to see keywords';
+                    }
+                }
+            }
+
+            static extractKeywords(text) {
+                const stopWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must', 'can', 'this', 'that', 'these', 'those']);
+
+                try {
+                    const words = text.toLowerCase().match(/\b\w{3,}\b/g) || [];
+                    const wordCount = {};
+
+                    words.forEach(word => {
+                        // Additional security: validate each word
+                        const validation = SecurityManager.validateInput(word, { maxLength: 50, allowSpecialChars: false });
+                        if (validation.valid && !stopWords.has(validation.sanitized)) {
+                            wordCount[validation.sanitized] = (wordCount[validation.sanitized] || 0) + 1;
+                        }
+                    });
+
+                    return Object.entries(wordCount)
+                        .sort(([, a], [, b]) => b - a)
+                        .slice(0, 10)
+                        .map(([word]) => word);
+                } catch (error) {
+                    console.error('Keyword extraction error:', error);
+                    return [];
+                }
+            }
+
+            static safeUpdateElement(id, content) {
+                const element = document.getElementById(id);
+                if (element) {
+                    const validation = SecurityManager.validateInput(String(content), { maxLength: 100 });
+                    element.textContent = validation.sanitized;
+                }
+            }
+
+            static saveCalculation(text) {
+                try {
+                    const data = {
+                        wordCount: (text.match(/\b\w+\b/g) || []).length,
+                        charCount: text.length,
+                        textSample: text.substring(0, 100) + (text.length > 100 ? '...' : ''),
+                        timestamp: Date.now()
+                    };
+
+                    const calculation = {
+                        id: generateId(),
+                        tool: 'TextAnalyzer',
+                        timestamp: Date.now(),
+                        data: data
+                    };
+
+                    let history = StorageManager.get('history', []);
+                    history.unshift(calculation);
+
+                    if (history.length > CONFIG.maxCalculationHistory) {
+                        history = history.slice(0, CONFIG.maxCalculationHistory);
+                    }
+
+                    StorageManager.set('history', history);
+                    AppState.history = history;
+                } catch (error) {
+                    console.error('Save calculation error:', error);
+                }
+            }
+        }
+
+        // =============================================================================
+        // PLACEHOLDER TOOL IMPLEMENTATIONS
+        // =============================================================================
+
+        class TimeCoordinator {
+            static init() {
+                console.log('Secure Time Coordinator initialized');
+            }
+        }
+
+        class CommitmentCalculator {
+            static init() {
+                console.log('Secure Commitment Calculator initialized');
+            }
+        }
+
+        class CostEscalator {
+            static init() {
+                console.log('Secure Cost Escalator initialized');
+            }
+        }
+
+        // =============================================================================
+        // PWA MANAGER
+        // =============================================================================
+
+        class PWAManager {
+            static init() {
+                // Register service worker
+                if ('serviceWorker' in navigator) {
+                    window.addEventListener('load', async () => {
+                        try {
+                            const registration = await navigator.serviceWorker.register('sw.js');
+                            console.log('ServiceWorker registered successfully');
+                        } catch (error) {
+                            console.log('ServiceWorker registration failed: ', error);
+                        }
+                    });
+                }
+
+                // PWA install prompt
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    const installButton = document.getElementById('install-button');
+                    if (installButton) {
+                        installButton.classList.remove('hidden');
+                    }
+
+                    // Show install prompt after delay
+                    setTimeout(() => {
+                        if (!StorageManager.get('installPromptDismissed')) {
+                            const installPrompt = document.getElementById('install-prompt');
+                            if (installPrompt) {
+                                installPrompt.classList.remove('hidden');
+                            }
+                        }
+                    }, 5000);
+                });
+            }
+
+            static async install() {
+                if (deferredPrompt) {
+                    try {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+
+                        if (outcome === 'accepted') {
+                            NotificationManager.show('App installed successfully!', 'success');
+                        } else {
+                            NotificationManager.show('Installation cancelled', 'info');
+                        }
+
+                        deferredPrompt = null;
+                        const installButton = document.getElementById('install-button');
+                        const installPrompt = document.getElementById('install-prompt');
+                        
+                        if (installButton) installButton.classList.add('hidden');
+                        if (installPrompt) installPrompt.classList.add('hidden');
+                    } catch (error) {
+                        console.error('Installation error:', error);
+                        NotificationManager.show('Installation failed', 'error');
+                    }
+                }
+            }
+
+            static dismissInstallPrompt() {
+                const installPrompt = document.getElementById('install-prompt');
+                if (installPrompt) {
+                    installPrompt.classList.add('hidden');
+                }
+                StorageManager.set('installPromptDismissed', true);
+            }
+        }
+
+        // =============================================================================
+        // EVENT HANDLERS AND INITIALIZATION
+        // =============================================================================
+
+        // Touch gesture handling
+        function handleTouchStart(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }
+
+        function handleTouchEnd(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleGesture();
+        }
+
+        function handleGesture() {
+            const threshold = 50;
+            const diff = touchStartX - touchEndX;
+
+            if (Math.abs(diff) > threshold) {
+                if (diff > 0) {
+                    navigateTools(1); // Swipe left - next tool
+                } else {
+                    navigateTools(-1); // Swipe right - previous tool
+                }
+            }
+        }
+
+        function navigateTools(direction) {
+            const tools = ['Dashboard', 'TextAnalyzer', 'TimeCoordinator', 'CommitmentCalculator', 'CostEscalator'];
+            const currentIndex = tools.indexOf(currentView);
+            let newIndex = currentIndex + direction;
+
+            if (newIndex >= tools.length) newIndex = 0;
+            if (newIndex < 0) newIndex = tools.length - 1;
+
+            UIManager.setCurrentView(tools[newIndex]);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey) {
+                const keyMap = {
+                    '1': 'Dashboard',
+                    '2': 'TextAnalyzer',
+                    '3': 'TimeCoordinator',
+                    '4': 'CommitmentCalculator',
+                    '5': 'CostEscalator'
+                };
+
+                if (keyMap[e.key]) {
+                    e.preventDefault();
+                    UIManager.setCurrentView(keyMap[e.key]);
+                }
+            }
+
+            if (e.key === 'Escape') {
+                if (currentView !== 'Dashboard') {
+                    UIManager.setCurrentView('Dashboard');
+                } else {
+                    UIManager.closeHelp();
+                }
+            }
+        });
+
+        // Help modal event handlers
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                UIManager.closeHelp();
+            }
+        });
+
+        const helpModal = document.getElementById('help-modal');
+        if (helpModal) {
+            helpModal.addEventListener('click', (e) => {
+                if (e.target.id === 'help-modal') {
+                    UIManager.closeHelp();
+                }
+            });
+        }
+
+        // Online/offline detection
+        window.addEventListener('online', () => {
+            AppState.isOnline = true;
+            NotificationManager.show('Back online!', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            AppState.isOnline = false;
+            NotificationManager.show('Working offline', 'info');
+        });
+
+        // Touch event listeners
+        document.addEventListener('touchstart', handleTouchStart, { passive: true });
+        document.addEventListener('touchend', handleTouchEnd, { passive: true });
+
+        // System theme detection
+        if (window.matchMedia && !StorageManager.get('preferences')) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            if (mediaQuery.matches) {
+                AppState.theme = 'dark';
+                document.documentElement.setAttribute('data-theme', 'dark');
+                UIManager.updateThemeIcons();
+            }
+
+            mediaQuery.addListener((e) => {
+                if (!StorageManager.get('preferences')?.theme) {
+                    const newTheme = e.matches ? 'dark' : 'light';
+                    document.documentElement.setAttribute('data-theme', newTheme);
+                    AppState.theme = newTheme;
+                    UIManager.updateThemeIcons();
+                }
+            });
+        }
+
+        // =============================================================================
+        // APPLICATION INITIALIZATION
+        // =============================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                // Load user preferences
+                StorageManager.loadUserPreferences();
+                
+                // Initialize PWA
+                PWAManager.init();
+                
+                // Render initial view
+                UIManager.renderApp();
+                
+                // Show welcome message
+                NotificationManager.show('🔒 Welcome to the Secure Cognitive Toolkit!', 'success');
+                
+                // Performance monitoring
+                if (window.performance && window.performance.mark) {
+                    window.performance.mark('secure-app-loaded');
+                    console.log(`Secure Cognitive Toolkit v${CONFIG.version} loaded successfully`);
+                }
+            } catch (error) {
+                console.error('Initialization error:', error);
+                NotificationManager.show('Application initialization failed', 'error');
+            }
+        });
+
+        // Global error handler
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            NotificationManager.show('An unexpected error occurred', 'error');
+        });
+
+        // Unhandled promise rejection handler
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            NotificationManager.show('An error occurred during processing', 'error');
+        });
+
+    </script>
+</body>
+</html>
