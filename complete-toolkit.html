@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Secure Cognitive Toolkit - Enhanced productivity suite with security protections">
+    <meta name="keywords" content="productivity, tools, text analysis, time zone, calculator, security">
+    <meta name="author" content="Cognitive Toolkit Team">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self';">
+    
+    <title>Secure Cognitive Toolkit - Complete Version</title>
+    
+    <!-- External Resources with SRI hashes for security -->
+    <script src="https://cdn.tailwindcss.com" 
+            integrity="sha384-ltB2HEaH2b3iKdPNLdhC8j/FxL4UnuGPCKr9ExGWrV3kyB7L8yl+SqAJrKm6lYw1" 
+            crossorigin="anonymous" 
+            onerror="this.remove()"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js" 
+            integrity="sha384-gQ2vQeL8S8mCFadJWyI3w3Qggai6G/J0LQFK4+g7zm6P0k3NY2UE+NfH5f1+PD9N" 
+            crossorigin="anonymous" 
+            onerror="console.warn('Chart.js failed to load')"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" 
+            integrity="sha384-6Y76Y6MWKWjHGPebWx7KEZR3MQV2hOyMng9glxTTEWaEgcfAg6pi6ra4v1O5VoFf" 
+            crossorigin="anonymous" 
+            onerror="console.warn('jsPDF failed to load')"></script>
+
+    <style>
+        /* Enhanced CSS Variables for Dynamic Theming */
+        [data-theme="light"] {
+            --primary-bg: #ffffff;
+            --secondary-bg: #f9fafb;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --accent-color: #3b82f6;
+            --border-color: #e5e7eb;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --primary-bg: #111827;
+            --secondary-bg: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --accent-color: #3b82f6;
+            --border-color: #374151;
+            --shadow-color: rgba(255, 255, 255, 0.1);
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--primary-bg);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-color), #1d4ed8);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            padding: 12px 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px var(--shadow-color);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px var(--shadow-color);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-color);
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px var(--shadow-color);
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px var(--shadow-color);
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--secondary-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            z-index: 1000;
+            animation: slideDown 0.3s ease-out;
+            min-width: 300px;
+            max-width: 90vw;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateX(-50%) translateY(-100%); }
+            to { transform: translateX(-50%) translateY(0); }
+        }
+
+        .security-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #059669;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+        }
+
+        input[type=range] {
+            height: 8px;
+            background: var(--border-color);
+            border-radius: 4px;
+            outline: none;
+            width: 100%;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 640px) {
+            .mobile-stack { flex-direction: column; }
+            .mobile-full { width: 100%; }
+        }
+    </style>
+</head>
+<body class="transition-colors duration-300">
+    <!-- Security Badge -->
+    <div class="security-badge" title="This app has been security hardened">🔒 Secure</div>
+    
+    <!-- Theme Toggle -->
+    <button class="theme-toggle" onclick="SecurityManager.toggleTheme()" aria-label="Toggle dark mode">
+        <svg id="theme-icon-light" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+        </svg>
+        <svg id="theme-icon-dark" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+    </button>
+
+    <div id="app-container" class="w-full max-w-7xl mx-auto p-4">
+        
+        <header class="w-full mb-8 p-6 card bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <div class="flex flex-col sm:flex-row items-center justify-between">
+                <div>
+                    <h1 class="text-4xl sm:text-5xl font-extrabold mb-2">The Cognitive Toolkit</h1>
+                    <p class="text-blue-100 text-lg">Complete Secure Productivity Suite</p>
+                </div>
+                <div class="mt-4 sm:mt-0 flex gap-2">
+                    <button class="btn-secondary text-blue-600" onclick="UIManager.showHelp()">
+                        ❓ Help
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main id="app-content" class="w-full fade-in"></main>
+        
+        <!-- Loading indicator -->
+        <div id="loading-indicator" class="hidden text-center">
+            <div class="spinner"></div>
+            <p class="mt-4 text-gray-500">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="card max-w-2xl w-full max-h-96 overflow-y-auto p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">How to Use</h2>
+                <button onclick="UIManager.closeHelp()" class="text-2xl">&times;</button>
+            </div>
+            <div class="space-y-4 text-sm">
+                <div class="p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
+                    <p class="font-semibold text-green-800">🔒 Security Features</p>
+                    <p class="text-green-700">This version includes comprehensive security protections.</p>
+                </div>
+                <div><h3 class="font-semibold text-emerald-600">📝 Text Analyzer</h3><p>Analyze text with security validation.</p></div>
+                <div><h3 class="font-semibold text-blue-600">🌍 Time Zone Coordinator</h3><p>Find optimal meeting times.</p></div>
+                <div><h3 class="font-semibold text-red-600">⚖️ Commitment Calculator</h3><p>Quantify task costs vs. rewards.</p></div>
+                <div><h3 class="font-semibold text-yellow-600">📈 Cost Escalator</h3><p>Visualize opportunity costs.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+        
+        // =============================================================================
+        // SECURITY MANAGER
+        // =============================================================================
+        
+        class SecurityManager {
+            static sanitizeHTML(input) {
+                if (typeof input !== 'string') return '';
+                const div = document.createElement('div');
+                div.textContent = input;
+                return div.innerHTML;
+            }
+            
+            static validateInput(input, options = {}) {
+                const { maxLength = 10000 } = options;
+                if (typeof input !== 'string') return { valid: false, sanitized: '', error: 'Input must be a string' };
+                if (input.length > maxLength) return { valid: false, sanitized: input.substring(0, maxLength), error: 'Input too long' };
+                
+                const sanitized = this.sanitizeHTML(input);
+                return { valid: true, sanitized: sanitized.trim(), error: null };
+            }
+            
+            static createElement(tag, properties = {}) {
+                const element = document.createElement(tag);
+                Object.entries(properties).forEach(([key, value]) => {
+                    if (key === 'textContent') element.textContent = String(value);
+                    else if (key === 'className') element.className = String(value);
+                    else if (key === 'id') element.id = String(value);
+                    else if (key.startsWith('data-')) element.setAttribute(key, String(value));
+                    else if (typeof element[key] !== 'function') element[key] = value;
+                });
+                return element;
+            }
+            
+            static toggleTheme() {
+                const current = document.documentElement.getAttribute('data-theme') || 'light';
+                const newTheme = current === 'light' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', newTheme);
+                
+                const lightIcon = document.getElementById('theme-icon-light');
+                const darkIcon = document.getElementById('theme-icon-dark');
+                
+                if (newTheme === 'dark') {
+                    lightIcon?.classList.add('hidden');
+                    darkIcon?.classList.remove('hidden');
+                } else {
+                    lightIcon?.classList.remove('hidden');
+                    darkIcon?.classList.add('hidden');
+                }
+                
+                NotificationManager.show(`Switched to ${newTheme} mode`, 'success');
+            }
+        }
+
+        // =============================================================================
+        // NOTIFICATION MANAGER
+        // =============================================================================
+
+        class NotificationManager {
+            static show(message, type = 'info', duration = 3000) {
+                const validation = SecurityManager.validateInput(message, { maxLength: 200 });
+                if (!validation.valid) return;
+                
+                const notification = SecurityManager.createElement('div', {
+                    className: `notification ${type}`
+                });
+                
+                const messageSpan = SecurityManager.createElement('span', {
+                    textContent: validation.sanitized
+                });
+                
+                const closeButton = SecurityManager.createElement('button', {
+                    className: 'ml-auto text-lg',
+                    textContent: '×'
+                });
+                
+                closeButton.onclick = () => notification.remove();
+                
+                notification.appendChild(messageSpan);
+                notification.appendChild(closeButton);
+                document.body.appendChild(notification);
+                
+                if (duration > 0) {
+                    setTimeout(() => notification.remove(), duration);
+                }
+            }
+        }
+
+        // =============================================================================
+        // GLOBAL STATE AND CONFIGURATION
+        // =============================================================================
+        
+        let currentView = 'Dashboard';
+        const APP_CONTENT = document.getElementById('app-content');
+        const LOADING = document.getElementById('loading-indicator');
+
+        // =============================================================================
+        // UI MANAGER
+        // =============================================================================
+
+        class UIManager {
+            static showLoading() { LOADING.classList.remove('hidden'); }
+            static hideLoading() { LOADING.classList.add('hidden'); }
+
+            static showHelp() { document.getElementById('help-modal')?.classList.remove('hidden'); }
+            static closeHelp() { document.getElementById('help-modal')?.classList.add('hidden'); }
+
+            static setCurrentView(viewName) {
+                const validViews = ['Dashboard', 'TextAnalyzer', 'TimeCoordinator', 'CommitmentCalculator', 'CostEscalator'];
+                if (!validViews.includes(viewName)) return;
+
+                this.showLoading();
+                currentView = viewName;
+                
+                setTimeout(() => {
+                    this.renderApp();
+                    this.hideLoading();
+                }, 150);
+            }
+
+            static renderApp() {
+                while (APP_CONTENT.firstChild) {
+                    APP_CONTENT.removeChild(APP_CONTENT.firstChild);
+                }
+                
+                let content;
+                if (currentView === 'Dashboard') {
+                    content = DashboardRenderer.render();
+                } else {
+                    content = ToolRenderer.render(currentView);
+                }
+                
+                if (content) {
+                    APP_CONTENT.appendChild(content);
+                    
+                    setTimeout(() => {
+                        this.initializeCurrentTool();
+                    }, 50);
+                }
+            }
+
+            static initializeCurrentTool() {
+                try {
+                    switch(currentView) {
+                        case 'TextAnalyzer':
+                            TextAnalyzer.init();
+                            break;
+                        case 'TimeCoordinator':
+                            TimeCoordinator.init();
+                            break;
+                        case 'CommitmentCalculator':
+                            CommitmentCalculator.init();
+                            break;
+                        case 'CostEscalator':
+                            CostEscalator.init();
+                            break;
+                    }
+                } catch (error) {
+                    console.error('Tool initialization error:', error);
+                    NotificationManager.show('Error initializing tool', 'error');
+                }
+            }
+        }
+
+        // =============================================================================
+        // DASHBOARD RENDERER
+        // =============================================================================
+
+        class DashboardRenderer {
+            static render() {
+                const container = SecurityManager.createElement('div', { className: 'space-y-8' });
+
+                const toolGrid = this.createToolGrid();
+                container.appendChild(toolGrid);
+
+                return container;
+            }
+
+            static createToolGrid() {
+                const container = SecurityManager.createElement('div', {
+                    className: 'grid grid-cols-1 md:grid-cols-2 gap-6'
+                });
+
+                const tools = [
+                    {
+                        view: 'TextAnalyzer',
+                        title: 'Secure Text Analyzer',
+                        description: 'Analyze text with readability metrics and keyword extraction',
+                        color: 'from-emerald-500 to-emerald-600',
+                        emoji: '📝'
+                    },
+                    {
+                        view: 'TimeCoordinator',
+                        title: 'Time Zone Coordinator',
+                        description: 'Find optimal meeting times across time zones',
+                        color: 'from-blue-500 to-blue-600',
+                        emoji: '🌍'
+                    },
+                    {
+                        view: 'CommitmentCalculator',
+                        title: 'Commitment Calculator',
+                        description: 'Evaluate tasks based on effort vs. value',
+                        color: 'from-red-500 to-red-600',
+                        emoji: '⚖️'
+                    },
+                    {
+                        view: 'CostEscalator',
+                        title: 'Cost Escalator',
+                        description: 'Calculate opportunity costs with compound growth',
+                        color: 'from-yellow-500 to-yellow-600',
+                        emoji: '📈'
+                    }
+                ];
+
+                tools.forEach(tool => {
+                    const card = this.createToolCard(tool);
+                    container.appendChild(card);
+                });
+
+                return container;
+            }
+
+            static createToolCard(tool) {
+                const card = SecurityManager.createElement('div', {
+                    className: `group card p-6 cursor-pointer transition-all duration-300 hover:scale-105 bg-gradient-to-r ${tool.color} text-white`
+                });
+
+                card.onclick = () => UIManager.setCurrentView(tool.view);
+
+                const header = SecurityManager.createElement('div', {
+                    className: 'flex items-center mb-4'
+                });
+
+                const emoji = SecurityManager.createElement('span', {
+                    className: 'text-3xl mr-3',
+                    textContent: tool.emoji
+                });
+
+                const titleH2 = SecurityManager.createElement('h2', {
+                    className: 'text-xl font-bold',
+                    textContent: tool.title
+                });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'opacity-90 mb-4',
+                    textContent: tool.description
+                });
+
+                const footer = SecurityManager.createElement('div', {
+                    className: 'text-sm opacity-75',
+                    textContent: 'Click to open →'
+                });
+
+                header.appendChild(emoji);
+                header.appendChild(titleH2);
+                card.appendChild(header);
+                card.appendChild(description);
+                card.appendChild(footer);
+
+                return card;
+            }
+        }
+
+        // =============================================================================
+        // TOOL RENDERER
+        // =============================================================================
+
+        class ToolRenderer {
+            static render(viewName) {
+                const container = SecurityManager.createElement('div');
+
+                const header = this.createToolHeader(viewName);
+                const content = this.createToolContent(viewName);
+
+                container.appendChild(header);
+                container.appendChild(content);
+
+                return container;
+            }
+
+            static createToolHeader(viewName) {
+                const header = SecurityManager.createElement('div', {
+                    className: 'mb-6 flex items-center justify-between'
+                });
+
+                const titles = {
+                    'TextAnalyzer': 'Secure Text Analyzer',
+                    'TimeCoordinator': 'Time Zone Coordinator',
+                    'CommitmentCalculator': 'Commitment Calculator',
+                    'CostEscalator': 'Cost Escalator'
+                };
+
+                const title = SecurityManager.createElement('h2', {
+                    className: 'text-3xl font-bold',
+                    textContent: titles[viewName] || viewName
+                });
+
+                const backButton = SecurityManager.createElement('button', {
+                    className: 'btn-primary',
+                    textContent: '← Dashboard'
+                });
+                backButton.onclick = () => UIManager.setCurrentView('Dashboard');
+
+                header.appendChild(title);
+                header.appendChild(backButton);
+
+                return header;
+            }
+
+            static createToolContent(viewName) {
+                const container = SecurityManager.createElement('div', {
+                    className: 'card p-6 fade-in'
+                });
+
+                let content;
+                switch(viewName) {
+                    case 'TextAnalyzer':
+                        content = this.createTextAnalyzerContent();
+                        break;
+                    case 'TimeCoordinator':
+                        content = this.createTimeCoordinatorContent();
+                        break;
+                    case 'CommitmentCalculator':
+                        content = this.createCommitmentCalculatorContent();
+                        break;
+                    case 'CostEscalator':
+                        content = this.createCostEscalatorContent();
+                        break;
+                    default:
+                        content = SecurityManager.createElement('div', { textContent: 'Tool not found' });
+                }
+
+                container.appendChild(content);
+                return container;
+            }
+
+            static createTextAnalyzerContent() {
+                const container = SecurityManager.createElement('div', { className: 'space-y-6' });
+
+                const grid = SecurityManager.createElement('div', { className: 'grid grid-cols-1 lg:grid-cols-3 gap-6' });
+
+                // Input area
+                const inputContainer = SecurityManager.createElement('div', { className: 'lg:col-span-2' });
+                
+                const label = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium mb-2',
+                    textContent: 'Your Text (Secure Input)'
+                });
+
+                const textarea = SecurityManager.createElement('textarea', {
+                    className: 'w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all',
+                    id: 'text-input'
+                });
+                textarea.setAttribute('rows', '12');
+                textarea.setAttribute('placeholder', 'Start typing your content here...');
+
+                inputContainer.appendChild(label);
+                inputContainer.appendChild(textarea);
+
+                // Stats panel
+                const statsContainer = SecurityManager.createElement('div', {
+                    className: 'space-y-4',
+                    id: 'text-stats'
+                });
+
+                const statsTitle = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold',
+                    textContent: 'Text Statistics'
+                });
+
+                statsContainer.appendChild(statsTitle);
+
+                grid.appendChild(inputContainer);
+                grid.appendChild(statsContainer);
+                container.appendChild(grid);
+
+                return container;
+            }
+
+            static createTimeCoordinatorContent() {
+                const container = SecurityManager.createElement('div', { className: 'space-y-6' });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Find the optimal meeting time across multiple time zones.'
+                });
+
+                const grid = SecurityManager.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' });
+
+                // Meeting details
+                const detailsContainer = SecurityManager.createElement('div', { className: 'space-y-4' });
+
+                const titleLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Meeting Title'
+                });
+
+                const titleInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'meeting-title'
+                });
+                titleInput.setAttribute('type', 'text');
+                titleInput.setAttribute('placeholder', 'Enter meeting title');
+
+                const durationLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Duration (hours)'
+                });
+
+                const durationInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'meeting-duration'
+                });
+                durationInput.setAttribute('type', 'number');
+                durationInput.setAttribute('value', '1');
+                durationInput.setAttribute('min', '0.5');
+                durationInput.setAttribute('max', '8');
+                durationInput.setAttribute('step', '0.5');
+
+                detailsContainer.appendChild(titleLabel);
+                detailsContainer.appendChild(titleInput);
+                detailsContainer.appendChild(durationLabel);
+                detailsContainer.appendChild(durationInput);
+
+                // Time zones
+                const zonesContainer = SecurityManager.createElement('div', { className: 'space-y-4', id: 'timezone-container' });
+
+                const zonesTitle = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold',
+                    textContent: 'Time Zones'
+                });
+
+                const addZoneButton = SecurityManager.createElement('button', {
+                    className: 'btn-primary w-full',
+                    textContent: '+ Add Time Zone'
+                });
+
+                zonesContainer.appendChild(zonesTitle);
+                zonesContainer.appendChild(addZoneButton);
+
+                grid.appendChild(detailsContainer);
+                grid.appendChild(zonesContainer);
+
+                container.appendChild(description);
+                container.appendChild(grid);
+
+                return container;
+            }
+
+            static createCommitmentCalculatorContent() {
+                const container = SecurityManager.createElement('div', { className: 'space-y-6' });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Evaluate tasks by weighing effort against potential value and rewards.'
+                });
+
+                const grid = SecurityManager.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' });
+
+                // Task input
+                const taskContainer = SecurityManager.createElement('div', { className: 'space-y-4' });
+
+                const taskLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Task Description'
+                });
+
+                const taskInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'task-description'
+                });
+                taskInput.setAttribute('type', 'text');
+                taskInput.setAttribute('placeholder', 'Describe your task...');
+
+                const effortLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Effort Level (1-10)'
+                });
+
+                const effortSlider = SecurityManager.createElement('input', {
+                    id: 'effort-slider'
+                });
+                effortSlider.setAttribute('type', 'range');
+                effortSlider.setAttribute('min', '1');
+                effortSlider.setAttribute('max', '10');
+                effortSlider.setAttribute('value', '5');
+
+                const effortValue = SecurityManager.createElement('span', {
+                    className: 'text-lg font-semibold',
+                    id: 'effort-value',
+                    textContent: '5'
+                });
+
+                const valueLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Expected Value (1-10)'
+                });
+
+                const valueSlider = SecurityManager.createElement('input', {
+                    id: 'value-slider'
+                });
+                valueSlider.setAttribute('type', 'range');
+                valueSlider.setAttribute('min', '1');
+                valueSlider.setAttribute('max', '10');
+                valueSlider.setAttribute('value', '5');
+
+                const valueValue = SecurityManager.createElement('span', {
+                    className: 'text-lg font-semibold',
+                    id: 'value-value',
+                    textContent: '5'
+                });
+
+                taskContainer.appendChild(taskLabel);
+                taskContainer.appendChild(taskInput);
+                taskContainer.appendChild(effortLabel);
+                taskContainer.appendChild(effortSlider);
+                taskContainer.appendChild(effortValue);
+                taskContainer.appendChild(valueLabel);
+                taskContainer.appendChild(valueSlider);
+                taskContainer.appendChild(valueValue);
+
+                // Results
+                const resultsContainer = SecurityManager.createElement('div', {
+                    className: 'space-y-4',
+                    id: 'commitment-results'
+                });
+
+                const resultsTitle = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold',
+                    textContent: 'Analysis Results'
+                });
+
+                resultsContainer.appendChild(resultsTitle);
+
+                grid.appendChild(taskContainer);
+                grid.appendChild(resultsContainer);
+
+                container.appendChild(description);
+                container.appendChild(grid);
+
+                return container;
+            }
+
+            static createCostEscalatorContent() {
+                const container = SecurityManager.createElement('div', { className: 'space-y-6' });
+
+                const description = SecurityManager.createElement('p', {
+                    className: 'text-gray-600',
+                    textContent: 'Calculate opportunity costs and visualize compound growth effects.'
+                });
+
+                const grid = SecurityManager.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 gap-6' });
+
+                // Input form
+                const formContainer = SecurityManager.createElement('div', { className: 'space-y-4' });
+
+                const initialLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Initial Amount ($)'
+                });
+
+                const initialInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'initial-amount'
+                });
+                initialInput.setAttribute('type', 'number');
+                initialInput.setAttribute('placeholder', '1000');
+                initialInput.setAttribute('value', '1000');
+
+                const rateLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Growth Rate (% per year)'
+                });
+
+                const rateInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'growth-rate'
+                });
+                rateInput.setAttribute('type', 'number');
+                rateInput.setAttribute('placeholder', '7');
+                rateInput.setAttribute('value', '7');
+                rateInput.setAttribute('step', '0.1');
+
+                const yearsLabel = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Time Period (years)'
+                });
+
+                const yearsInput = SecurityManager.createElement('input', {
+                    className: 'w-full p-3 border border-gray-300 rounded-lg',
+                    id: 'time-period'
+                });
+                yearsInput.setAttribute('type', 'number');
+                yearsInput.setAttribute('placeholder', '10');
+                yearsInput.setAttribute('value', '10');
+                yearsInput.setAttribute('min', '1');
+
+                const calculateButton = SecurityManager.createElement('button', {
+                    className: 'btn-primary w-full',
+                    textContent: 'Calculate Opportunity Cost',
+                    id: 'calculate-cost'
+                });
+
+                formContainer.appendChild(initialLabel);
+                formContainer.appendChild(initialInput);
+                formContainer.appendChild(rateLabel);
+                formContainer.appendChild(rateInput);
+                formContainer.appendChild(yearsLabel);
+                formContainer.appendChild(yearsInput);
+                formContainer.appendChild(calculateButton);
+
+                // Results
+                const resultsContainer = SecurityManager.createElement('div', {
+                    className: 'space-y-4',
+                    id: 'cost-results'
+                });
+
+                const resultsTitle = SecurityManager.createElement('h3', {
+                    className: 'text-lg font-semibold',
+                    textContent: 'Projection Results'
+                });
+
+                resultsContainer.appendChild(resultsTitle);
+
+                grid.appendChild(formContainer);
+                grid.appendChild(resultsContainer);
+
+                container.appendChild(description);
+                container.appendChild(grid);
+
+                return container;
+            }
+        }
+
+        // =============================================================================
+        // TEXT ANALYZER TOOL
+        // =============================================================================
+
+        class TextAnalyzer {
+            static init() {
+                const textInput = document.getElementById('text-input');
+                const statsContainer = document.getElementById('text-stats');
+
+                if (!textInput || !statsContainer) return;
+
+                textInput.addEventListener('input', () => {
+                    this.analyzeText(textInput.value, statsContainer);
+                });
+
+                // Initial analysis
+                this.analyzeText(textInput.value, statsContainer);
+            }
+
+            static analyzeText(text, container) {
+                const validation = SecurityManager.validateInput(text);
+                if (!validation.valid) {
+                    NotificationManager.show(validation.error, 'error');
+                    return;
+                }
+
+                const sanitized = validation.sanitized;
+                const stats = this.calculateStats(sanitized);
+
+                // Clear existing stats
+                while (container.children.length > 1) {
+                    container.removeChild(container.lastChild);
+                }
+
+                // Add new stats
+                Object.entries(stats).forEach(([key, value]) => {
+                    const statDiv = SecurityManager.createElement('div', {
+                        className: 'p-3 bg-gray-50 rounded-lg border'
+                    });
+
+                    const label = SecurityManager.createElement('div', {
+                        className: 'text-sm font-medium text-gray-600',
+                        textContent: this.getStatLabel(key)
+                    });
+
+                    const valueDiv = SecurityManager.createElement('div', {
+                        className: 'text-2xl font-bold text-blue-600',
+                        textContent: String(value)
+                    });
+
+                    statDiv.appendChild(label);
+                    statDiv.appendChild(valueDiv);
+                    container.appendChild(statDiv);
+                });
+            }
+
+            static calculateStats(text) {
+                const words = text.trim() ? text.trim().split(/\s+/) : [];
+                const sentences = text.trim() ? text.split(/[.!?]+/).filter(s => s.trim()) : [];
+                const paragraphs = text.trim() ? text.split(/\n\s*\n/).filter(p => p.trim()) : [];
+
+                return {
+                    characters: text.length,
+                    words: words.length,
+                    sentences: sentences.length,
+                    paragraphs: paragraphs.length,
+                    avgWordsPerSentence: sentences.length ? Math.round((words.length / sentences.length) * 10) / 10 : 0,
+                    readingTime: Math.ceil(words.length / 200) // 200 words per minute
+                };
+            }
+
+            static getStatLabel(key) {
+                const labels = {
+                    characters: 'Characters',
+                    words: 'Words',
+                    sentences: 'Sentences',
+                    paragraphs: 'Paragraphs',
+                    avgWordsPerSentence: 'Avg Words/Sentence',
+                    readingTime: 'Reading Time (min)'
+                };
+                return labels[key] || key;
+            }
+        }
+
+        // =============================================================================
+        // TIME COORDINATOR TOOL
+        // =============================================================================
+
+        class TimeCoordinator {
+            static init() {
+                const addZoneButton = document.querySelector('#timezone-container button');
+                if (addZoneButton) {
+                    addZoneButton.onclick = () => this.addTimeZone();
+                }
+                
+                // Add initial time zone
+                this.addTimeZone();
+                this.addTimeZone();
+            }
+
+            static addTimeZone() {
+                const container = document.getElementById('timezone-container');
+                if (!container) return;
+
+                const zoneDiv = SecurityManager.createElement('div', {
+                    className: 'p-4 border border-gray-200 rounded-lg space-y-2'
+                });
+
+                const label = SecurityManager.createElement('label', {
+                    className: 'block text-sm font-medium',
+                    textContent: 'Location'
+                });
+
+                const input = SecurityManager.createElement('input', {
+                    className: 'w-full p-2 border border-gray-300 rounded',
+                });
+                input.setAttribute('type', 'text');
+                input.setAttribute('placeholder', 'e.g., New York, London, Tokyo');
+
+                const timeSelect = SecurityManager.createElement('select', {
+                    className: 'w-full p-2 border border-gray-300 rounded'
+                });
+
+                // Common time zones
+                const timeZones = [
+                    { value: 'America/New_York', label: 'Eastern Time (UTC-5/-4)' },
+                    { value: 'America/Chicago', label: 'Central Time (UTC-6/-5)' },
+                    { value: 'America/Denver', label: 'Mountain Time (UTC-7/-6)' },
+                    { value: 'America/Los_Angeles', label: 'Pacific Time (UTC-8/-7)' },
+                    { value: 'Europe/London', label: 'London (UTC+0/+1)' },
+                    { value: 'Europe/Paris', label: 'Paris (UTC+1/+2)' },
+                    { value: 'Asia/Tokyo', label: 'Tokyo (UTC+9)' },
+                    { value: 'Asia/Shanghai', label: 'Shanghai (UTC+8)' },
+                    { value: 'Australia/Sydney', label: 'Sydney (UTC+10/+11)' }
+                ];
+
+                timeZones.forEach(tz => {
+                    const option = SecurityManager.createElement('option', {
+                        textContent: tz.label
+                    });
+                    option.value = tz.value;
+                    timeSelect.appendChild(option);
+                });
+
+                const timeDisplay = SecurityManager.createElement('div', {
+                    className: 'text-lg font-semibold text-blue-600',
+                    textContent: new Date().toLocaleTimeString()
+                });
+
+                const removeButton = SecurityManager.createElement('button', {
+                    className: 'text-red-600 text-sm hover:text-red-800',
+                    textContent: 'Remove'
+                });
+                removeButton.onclick = () => zoneDiv.remove();
+
+                zoneDiv.appendChild(label);
+                zoneDiv.appendChild(input);
+                zoneDiv.appendChild(timeSelect);
+                zoneDiv.appendChild(timeDisplay);
+                zoneDiv.appendChild(removeButton);
+
+                // Insert before the add button
+                const addButton = container.querySelector('button');
+                container.insertBefore(zoneDiv, addButton);
+
+                // Update time display
+                setInterval(() => {
+                    const now = new Date();
+                    timeDisplay.textContent = now.toLocaleTimeString('en-US', {
+                        timeZone: timeSelect.value
+                    });
+                }, 1000);
+            }
+        }
+
+        // =============================================================================
+        // COMMITMENT CALCULATOR TOOL
+        // =============================================================================
+
+        class CommitmentCalculator {
+            static init() {
+                const effortSlider = document.getElementById('effort-slider');
+                const valueSlider = document.getElementById('value-slider');
+                const effortValue = document.getElementById('effort-value');
+                const valueValue = document.getElementById('value-value');
+                const resultsContainer = document.getElementById('commitment-results');
+
+                if (!effortSlider || !valueSlider || !resultsContainer) return;
+
+                const updateAnalysis = () => {
+                    const effort = parseInt(effortSlider.value);
+                    const value = parseInt(valueSlider.value);
+                    
+                    effortValue.textContent = effort;
+                    valueValue.textContent = value;
+                    
+                    this.calculateCommitment(effort, value, resultsContainer);
+                };
+
+                effortSlider.addEventListener('input', updateAnalysis);
+                valueSlider.addEventListener('input', updateAnalysis);
+
+                // Initial calculation
+                updateAnalysis();
+            }
+
+            static calculateCommitment(effort, value, container) {
+                const ratio = value / effort;
+                const score = Math.round(ratio * 100) / 100;
+
+                let recommendation = '';
+                let color = '';
+
+                if (ratio > 1.5) {
+                    recommendation = 'Highly Recommended - Great value for effort';
+                    color = 'text-green-600';
+                } else if (ratio > 1.0) {
+                    recommendation = 'Recommended - Good return on investment';
+                    color = 'text-blue-600';
+                } else if (ratio > 0.7) {
+                    recommendation = 'Consider Carefully - Moderate value';
+                    color = 'text-yellow-600';
+                } else {
+                    recommendation = 'Not Recommended - Low value for effort';
+                    color = 'text-red-600';
+                }
+
+                // Clear existing results (keep title)
+                while (container.children.length > 1) {
+                    container.removeChild(container.lastChild);
+                }
+
+                const scoreDiv = SecurityManager.createElement('div', {
+                    className: 'p-4 bg-gray-50 rounded-lg text-center'
+                });
+
+                const scoreLabel = SecurityManager.createElement('div', {
+                    className: 'text-sm text-gray-600',
+                    textContent: 'Value/Effort Ratio'
+                });
+
+                const scoreNumber = SecurityManager.createElement('div', {
+                    className: `text-3xl font-bold ${color}`,
+                    textContent: score.toFixed(2)
+                });
+
+                scoreDiv.appendChild(scoreLabel);
+                scoreDiv.appendChild(scoreNumber);
+
+                const recDiv = SecurityManager.createElement('div', {
+                    className: `p-4 rounded-lg ${color} font-semibold`,
+                    textContent: recommendation
+                });
+
+                container.appendChild(scoreDiv);
+                container.appendChild(recDiv);
+            }
+        }
+
+        // =============================================================================
+        // COST ESCALATOR TOOL
+        // =============================================================================
+
+        class CostEscalator {
+            static init() {
+                const calculateButton = document.getElementById('calculate-cost');
+                const resultsContainer = document.getElementById('cost-results');
+
+                if (!calculateButton || !resultsContainer) return;
+
+                calculateButton.onclick = () => this.calculateCost();
+
+                // Auto-calculate on input change
+                ['initial-amount', 'growth-rate', 'time-period'].forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('input', () => this.calculateCost());
+                    }
+                });
+
+                // Initial calculation
+                this.calculateCost();
+            }
+
+            static calculateCost() {
+                const initialAmount = parseFloat(document.getElementById('initial-amount')?.value || '0');
+                const growthRate = parseFloat(document.getElementById('growth-rate')?.value || '0') / 100;
+                const timePeriod = parseInt(document.getElementById('time-period')?.value || '0');
+                const resultsContainer = document.getElementById('cost-results');
+
+                if (!resultsContainer) return;
+
+                if (initialAmount <= 0 || growthRate < 0 || timePeriod <= 0) {
+                    return;
+                }
+
+                const futureValue = initialAmount * Math.pow(1 + growthRate, timePeriod);
+                const opportunityCost = futureValue - initialAmount;
+
+                // Clear existing results (keep title)
+                while (resultsContainer.children.length > 1) {
+                    resultsContainer.removeChild(resultsContainer.lastChild);
+                }
+
+                const currentDiv = this.createResultCard('Current Value', `$${initialAmount.toLocaleString()}`, 'text-blue-600');
+                const futureDiv = this.createResultCard('Future Value', `$${Math.round(futureValue).toLocaleString()}`, 'text-green-600');
+                const costDiv = this.createResultCard('Opportunity Cost', `$${Math.round(opportunityCost).toLocaleString()}`, 'text-red-600');
+
+                resultsContainer.appendChild(currentDiv);
+                resultsContainer.appendChild(futureDiv);
+                resultsContainer.appendChild(costDiv);
+
+                // Add growth visualization
+                this.createGrowthChart(initialAmount, growthRate, timePeriod, resultsContainer);
+            }
+
+            static createResultCard(label, value, colorClass) {
+                const card = SecurityManager.createElement('div', {
+                    className: 'p-4 bg-gray-50 rounded-lg text-center'
+                });
+
+                const labelDiv = SecurityManager.createElement('div', {
+                    className: 'text-sm text-gray-600',
+                    textContent: label
+                });
+
+                const valueDiv = SecurityManager.createElement('div', {
+                    className: `text-2xl font-bold ${colorClass}`,
+                    textContent: value
+                });
+
+                card.appendChild(labelDiv);
+                card.appendChild(valueDiv);
+
+                return card;
+            }
+
+            static createGrowthChart(initial, rate, years, container) {
+                const chartContainer = SecurityManager.createElement('div', {
+                    className: 'mt-6 p-4 bg-gray-50 rounded-lg'
+                });
+
+                const title = SecurityManager.createElement('h4', {
+                    className: 'text-lg font-semibold mb-4 text-center',
+                    textContent: 'Growth Projection'
+                });
+
+                const table = SecurityManager.createElement('table', {
+                    className: 'w-full text-sm'
+                });
+
+                const headerRow = SecurityManager.createElement('tr', {
+                    className: 'border-b'
+                });
+
+                ['Year', 'Value', 'Growth'].forEach(text => {
+                    const th = SecurityManager.createElement('th', {
+                        className: 'text-left p-2',
+                        textContent: text
+                    });
+                    headerRow.appendChild(th);
+                });
+
+                table.appendChild(headerRow);
+
+                // Calculate year-by-year growth
+                for (let year = 0; year <= Math.min(years, 10); year += Math.max(1, Math.floor(years / 10))) {
+                    const value = initial * Math.pow(1 + rate, year);
+                    const growth = year === 0 ? 0 : value - (initial * Math.pow(1 + rate, year - 1));
+
+                    const row = SecurityManager.createElement('tr');
+
+                    const yearCell = SecurityManager.createElement('td', {
+                        className: 'p-2',
+                        textContent: year
+                    });
+
+                    const valueCell = SecurityManager.createElement('td', {
+                        className: 'p-2',
+                        textContent: `$${Math.round(value).toLocaleString()}`
+                    });
+
+                    const growthCell = SecurityManager.createElement('td', {
+                        className: 'p-2 text-green-600',
+                        textContent: year === 0 ? '-' : `+$${Math.round(growth).toLocaleString()}`
+                    });
+
+                    row.appendChild(yearCell);
+                    row.appendChild(valueCell);
+                    row.appendChild(growthCell);
+                    table.appendChild(row);
+                }
+
+                chartContainer.appendChild(title);
+                chartContainer.appendChild(table);
+                container.appendChild(chartContainer);
+            }
+        }
+
+        // =============================================================================
+        // INITIALIZATION
+        // =============================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            UIManager.renderApp();
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (event) => {
+                if (event.altKey) {
+                    switch(event.code) {
+                        case 'Digit1':
+                            event.preventDefault();
+                            UIManager.setCurrentView('Dashboard');
+                            break;
+                        case 'Digit2':
+                            event.preventDefault();
+                            UIManager.setCurrentView('TextAnalyzer');
+                            break;
+                        case 'Digit3':
+                            event.preventDefault();
+                            UIManager.setCurrentView('TimeCoordinator');
+                            break;
+                        case 'Digit4':
+                            event.preventDefault();
+                            UIManager.setCurrentView('CommitmentCalculator');
+                            break;
+                        case 'Digit5':
+                            event.preventDefault();
+                            UIManager.setCurrentView('CostEscalator');
+                            break;
+                    }
+                }
+                
+                if (event.key === 'Escape' && currentView !== 'Dashboard') {
+                    UIManager.setCurrentView('Dashboard');
+                }
+            });
+            
+            NotificationManager.show('Secure Cognitive Toolkit loaded successfully', 'success');
+        });
+    </script>
+</body>
+</html>
